@@ -1,0 +1,147 @@
+/*
+================================================================================
+  STANDALONE AUDIO BEAT-MARKER ENGINE
+================================================================================
+  - Select an Audio Layer in your comp, set sensitivity, and click run.
+  - Automatically adds timeline markers to your audio layer on peak beats.
+================================================================================
+*/
+
+var beatMarkerWindow;
+
+(function(thisObj) {
+
+    beatMarkerWindow = (thisObj instanceof Panel) 
+        ? thisObj 
+        : new Window("palette", "Beat Marker Only Engine", undefined, {resizeable: true});
+
+    if (beatMarkerWindow != null) {
+
+        beatMarkerWindow.orientation = "column";
+        beatMarkerWindow.alignChildren = ["fill", "top"];
+        beatMarkerWindow.spacing = 8;
+        beatMarkerWindow.margins = 12;
+
+        // Settings Panel
+        var pnl = beatMarkerWindow.add("panel", undefined, "Beat Detection Settings");
+        pnl.orientation = "column";
+        pnl.alignChildren = ["left", "top"];
+        pnl.spacing = 6;
+
+        var gThresh = pnl.add("group");
+        gThresh.add("statictext", undefined, "Sensitivity (%):");
+        var inputThresh = gThresh.add("edittext", undefined, "80");
+        inputThresh.characters = 4;
+
+        var gMinGap = pnl.add("group");
+        gMinGap.add("statictext", undefined, "Min Beat Gap (s):");
+        var inputMinGap = gMinGap.add("edittext", undefined, "0.35");
+        inputMinGap.characters = 4;
+
+        var gFreq = pnl.add("group");
+        gFreq.add("statictext", undefined, "EQ Cutoff (Hz):");
+        var inputFreq = gFreq.add("edittext", undefined, "100");
+        inputFreq.characters = 4;
+
+        var btnRun = beatMarkerWindow.add("button", undefined, "MARK BEATS ON AUDIO");
+
+        btnRun.onClick = function() {
+            var comp = app.project.activeComp;
+            if (!comp) {
+                alert("Please select an active composition.");
+                return;
+            }
+
+            var selected = comp.selectedLayers;
+            if (selected.length === 0 || !selected[0].hasAudio) {
+                alert("Please select your Audio Layer before running.");
+                return;
+            }
+
+            var audioLayer = selected[0];
+            var sensitivity = parseFloat(inputThresh.text) / 100;
+            var minBeatGap = parseFloat(inputMinGap.text);
+            var frequency = parseFloat(inputFreq.text);
+
+            var audioStart = audioLayer.inPoint;
+            var audioEnd = audioLayer.outPoint;
+
+            app.beginUndoGroup("Generate Beat Markers");
+
+            // Step 1: Add EQ to boost bass/kick frequencies
+            var eqEffect = null;
+            try {
+                eqEffect = audioLayer.property("Effects").addProperty("ADBE Parametric EQ");
+                if (eqEffect) {
+                    eqEffect.property("Band 1 Frequency").setValue(frequency);
+                    eqEffect.property("Band 1 Boost/Cut").setValue(18.0);
+                }
+            } catch(e) {}
+
+            // Step 2: Convert Audio to Keyframes
+            deselectAllLayers(comp);
+            audioLayer.selected = true;
+
+            var convertId = app.findMenuCommandId("Convert Audio to Keyframes");
+            if (convertId) {
+                app.executeCommand(convertId);
+            } else {
+                app.executeCommand(5014); // Fallback command ID
+            }
+
+            var ampLayer = comp.layer("Audio Amplitude");
+            if (!ampLayer) {
+                alert("Failed to create Audio Amplitude layer.");
+                app.endUndoGroup();
+                return;
+            }
+
+            ampLayer.audioEnabled = false;
+
+            // Remove temporary EQ effect from audio track
+            if (eqEffect) {
+                try { eqEffect.remove(); } catch(e) {}
+            }
+
+            // Step 3: Analyze Peaks & Set Markers
+            var sliderProp = ampLayer.property("Effects").property("Both Channels").property("Slider");
+            var totalKeys = sliderProp.numKeys;
+            var maxVal = 0;
+
+            for (var j = 1; j <= totalKeys; j++) {
+                var val = sliderProp.keyValue(j);
+                if (val > maxVal) maxVal = val;
+            }
+
+            var cutoff = maxVal * sensitivity;
+            var detectedBeats = [];
+
+            for (var m = 1; m <= totalKeys; m++) {
+                var currentTime = sliderProp.keyTime(m);
+                if (currentTime >= audioStart && currentTime <= audioEnd) {
+                    var currentVal = sliderProp.keyValue(m);
+                    if (currentVal >= cutoff) {
+                        if (detectedBeats.length === 0 || (currentTime - detectedBeats[detectedBeats.length - 1]) >= minBeatGap) {
+                            detectedBeats.push(currentTime);
+                            audioLayer.property("Marker").setValueAtTime(currentTime, new MarkerValue("Beat " + (detectedBeats.length)));
+                        }
+                    }
+                }
+            }
+
+            app.endUndoGroup();
+            alert("Done! Placed " + detectedBeats.length + " beat markers on the audio layer.");
+        };
+
+        function deselectAllLayers(comp) {
+            for (var k = 1; k <= comp.numLayers; k++) comp.layer(k).selected = false;
+        }
+
+        if (beatMarkerWindow instanceof Window) {
+            beatMarkerWindow.center();
+            beatMarkerWindow.show();
+        } else {
+            beatMarkerWindow.layout.layout(true);
+        }
+    }
+})(this);

@@ -1,0 +1,26 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  poweredByHeader: false,
+  transpilePackages: ['three'],
+  experimental: {
+    serverComponentsExternalPackages: ['youtube-dl-exec', '@google/genai'],
+  },
+  async redirects() {
+    return [{ source: '/analyze', destination: '/inspect', permanent: false }];
+  },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
+      },
+    ];
+  },
+};
+
+export default nextConfig;

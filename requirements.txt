@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+yt-dlp
+opencv-python
+librosa
+scikit-learn
+pydantic
+scenedetect
+numpy

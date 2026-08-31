@@ -1,0 +1,26 @@
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# next
+.next
+out
+
+# env
+.env
+.env.local
+.env.*.local
+
+# temp video downloads for Gemini analysis
+.tmp
+tmp
+public/previews
+.cache
+
+# debug / OS
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
