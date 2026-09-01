@@ -1,11 +1,12 @@
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import path from 'path';
+import { getCacheDir } from '@/lib/cache-dir';
 import {
   amountsEqual,
   pickUniqueCheckoutAmount,
 } from '@/lib/upi-payment';
 
-const PAYMENTS_FILE = path.join(process.cwd(), '.cache', 'script-payments.json');
+const PAYMENTS_FILE = path.join(getCacheDir(), 'script-payments.json');
 
 export type PaymentStatus = 'pending' | 'paid' | 'rejected' | 'expired';
 

@@ -87,13 +87,10 @@ export function AeScriptsPanel({ open, onClose }: AeScriptsPanelProps) {
         method: 'POST',
         credentials: 'include',
       });
-      if (!startRes.ok) {
-        throw new Error('Could not start payment session.');
-      }
 
-      const startData = (await startRes.json()) as { qrDataUrl?: string };
-      if (!startData.qrDataUrl) {
-        throw new Error('Could not start payment session.');
+      const startData = (await startRes.json()) as { qrDataUrl?: string; error?: string };
+      if (!startRes.ok || !startData.qrDataUrl) {
+        throw new Error(startData.error || 'Could not start payment session.');
       }
 
       setQrDataUrl(startData.qrDataUrl);

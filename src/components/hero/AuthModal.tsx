@@ -74,7 +74,7 @@ export function AuthModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 28, scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 360, damping: 32 }}
-            className="relative w-full max-w-md overflow-hidden rounded-2xl border border-[#E2E8F0]/18 p-7 md:p-8"
+            className="relative w-full max-w-md overflow-hidden rounded-t-3xl border border-[#E2E8F0]/18 p-7 sm:rounded-2xl md:p-8"
             style={{
               background:
                 'linear-gradient(165deg, rgba(226,232,240,0.1) 0%, rgba(12,12,12,0.94) 42%, rgba(5,5,5,0.98) 100%)',
@@ -102,7 +102,7 @@ export function AuthModal({
                 id="auth-title"
                 className="mt-2 font-display text-2xl font-bold tracking-tight text-[#E2E8F0]"
               >
-                {mode === 'options' ? 'Get started free' : 'Continue with Email'}
+                {mode === 'options' ? 'Sign in to inspect edits' : 'Continue with Email'}
               </h2>
               <p className="mt-1.5 font-body text-sm text-[#94A3B8]">
                 scenenode is free. Sign in to start inspecting edits.
@@ -161,9 +161,17 @@ export function AuthModal({
                   />
                 </label>
                 <label className="flex flex-col gap-1.5">
-                  <span className="font-mono text-[10px] uppercase tracking-widest text-[#64748B]">
-                    Password
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-[#64748B]">
+                      Password
+                    </span>
+                    <button
+                      type="button"
+                      className="font-body text-[11px] text-[#64748B] transition hover:text-[#94A3B8]"
+                    >
+                      Forgot?
+                    </button>
+                  </div>
                   <input
                     type="password"
                     required
@@ -178,7 +186,7 @@ export function AuthModal({
                   disabled={loading}
                   className="mt-1 rounded-full bg-zinc-200 py-3.5 font-display text-sm font-semibold uppercase tracking-[0.16em] text-[#050505] disabled:opacity-55"
                 >
-                  {loading ? 'Continuing…' : 'Continue'}
+                  {loading ? 'Signing in…' : 'Sign In'}
                 </button>
                 <button
                   type="button"

@@ -9,9 +9,9 @@ const ACCEPT = 'video/mp4,video/quicktime,video/webm,video/*';
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 
 const PLATFORMS = [
-  { id: 'tiktok', label: 'TikTok', placeholder: 'TikTok, Instagram Reel, or YouTube Short URL' },
-  { id: 'instagram', label: 'Instagram Reels', placeholder: 'TikTok, Instagram Reel, or YouTube Short URL' },
-  { id: 'youtube', label: 'YouTube Shorts', placeholder: 'TikTok, Instagram Reel, or YouTube Short URL' },
+  { id: 'tiktok', label: 'TikTok', shortLabel: 'TikTok', placeholder: 'TikTok, Instagram Reel, or YouTube Short URL' },
+  { id: 'instagram', label: 'Instagram Reels', shortLabel: 'Instagram', placeholder: 'TikTok, Instagram Reel, or YouTube Short URL' },
+  { id: 'youtube', label: 'YouTube Shorts', shortLabel: 'YouTube', placeholder: 'TikTok, Instagram Reel, or YouTube Short URL' },
 ] as const;
 
 type PlatformId = (typeof PLATFORMS)[number]['id'];
@@ -147,7 +147,7 @@ export function UploadMethodPanel({
   return (
     <div
       className={cn(
-        'import-panel mx-auto flex w-full max-w-2xl flex-col gap-5 overflow-hidden px-4 pb-8 pt-4 sm:gap-6 sm:px-6 sm:pb-10 sm:pt-5',
+        'import-panel mx-auto flex w-full max-w-2xl flex-col gap-4 overflow-hidden px-4 pb-8 pt-3 sm:gap-6 sm:px-6 sm:pb-10 sm:pt-5',
         className
       )}
     >
@@ -157,14 +157,14 @@ export function UploadMethodPanel({
       <div className="import-hero-glow" aria-hidden />
       <div className="import-hero-scan" aria-hidden />
 
-      <header className="relative z-[1] text-center">
+      <header className="relative z-[1] text-center md:text-center">
         <p className="import-enter import-enter-d1 text-[11px] font-medium uppercase tracking-[0.2em] text-zinc-500">
           Import reference
         </p>
-        <h2 className="import-enter import-enter-d2 mt-2.5 text-xl font-semibold tracking-tight text-white sm:text-2xl">
+        <h2 className="import-enter import-enter-d2 mt-2 text-xl font-semibold tracking-tight text-white sm:text-2xl">
           Deconstruct any edit.
         </h2>
-        <p className="import-enter import-enter-d3 mx-auto mt-2.5 max-w-lg text-sm leading-relaxed text-zinc-500">
+        <p className="import-enter import-enter-d3 mx-auto mt-2 hidden max-w-lg text-sm leading-relaxed text-zinc-500 md:block">
           Paste a TikTok, Reel, or Shorts link and click Analyze — we download the clip, detect
           beats and cuts, map layered effects, and build a recreation guide. Or upload a local file
           to preview the workflow.
@@ -173,7 +173,7 @@ export function UploadMethodPanel({
 
       <div
         className={cn(
-          'import-enter import-enter-d4 import-dropzone relative z-[1] flex flex-col items-center px-6 py-10 text-center sm:py-12',
+          'import-enter import-enter-d4 import-dropzone relative z-[1] flex flex-col items-center rounded-2xl border border-zinc-800/80 bg-zinc-950/60 px-5 py-8 text-center sm:px-6 sm:py-12',
           dragging && 'is-dragging',
           accepted && 'is-accepted'
         )}
@@ -230,7 +230,7 @@ export function UploadMethodPanel({
             ? 'Preparing…'
             : dragging
               ? 'Release to begin'
-              : 'Drag and drop a video here, or choose a file'}
+              : 'MP4, MOV up to 50MB'}
         </p>
 
         <button
@@ -259,8 +259,8 @@ export function UploadMethodPanel({
 
       <div className="import-enter import-enter-d5 relative z-[1] flex items-center gap-4 px-1">
         <div className="import-or-line" />
-        <span className="shrink-0 text-[10px] font-medium uppercase tracking-[0.22em] text-zinc-600">
-          Or
+        <span className="shrink-0 text-[11px] font-medium lowercase text-zinc-500">
+          Or paste a link
         </span>
         <div className="import-or-line" />
       </div>
@@ -277,8 +277,8 @@ export function UploadMethodPanel({
           Paste a video link
         </label>
 
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
-          <div className="relative min-h-[44px] flex-1 overflow-hidden rounded-xl border border-zinc-800/90 bg-black/80 transition-[border-color] duration-300 focus-within:border-zinc-500">
+        <div className="flex flex-col gap-2.5">
+          <div className="relative min-h-[44px] w-full overflow-hidden rounded-xl border border-zinc-800/90 bg-black/80 transition-[border-color] duration-300 focus-within:border-zinc-500">
             {!url ? (
               <span
                 className="pointer-events-none absolute inset-y-0 left-4 z-0 flex items-center text-sm text-zinc-600"
@@ -309,7 +309,7 @@ export function UploadMethodPanel({
             onClick={analyzeLink}
             disabled={!linkValid || analyzing}
             className={cn(
-              'import-analyze-btn inline-flex min-h-[44px] shrink-0 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold',
+              'import-analyze-btn inline-flex min-h-[44px] w-full shrink-0 items-center justify-center gap-2 rounded-xl px-5 text-sm font-semibold sm:w-auto',
               linkValid && !analyzing
                 ? 'is-ready bg-white text-black'
                 : 'cursor-not-allowed bg-zinc-800/90 text-zinc-500'
@@ -329,7 +329,7 @@ export function UploadMethodPanel({
           </button>
         </div>
 
-        <div className="mt-3 flex flex-wrap gap-1.5">
+        <div className="mt-3 flex flex-wrap gap-2">
           {PLATFORMS.map((p) => {
             const active = activePlatform === p.id;
             return (
@@ -341,14 +341,15 @@ export function UploadMethodPanel({
                   linkRef.current?.focus();
                 }}
                 className={cn(
-                  'import-platform-pill inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px]',
+                  'import-platform-pill inline-flex min-h-[36px] items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] sm:text-[10px]',
                   active
                     ? 'border-zinc-500 bg-zinc-900 text-zinc-200'
-                    : 'border-zinc-800/80 bg-transparent text-zinc-600 hover:border-zinc-700 hover:text-zinc-400'
+                    : 'border-zinc-800/80 bg-transparent text-zinc-500 hover:border-zinc-700 hover:text-zinc-400'
                 )}
               >
                 <PlatformGlyph id={p.id} />
-                {p.label}
+                <span className="sm:hidden">{p.shortLabel}</span>
+                <span className="hidden sm:inline">{p.label}</span>
               </button>
             );
           })}

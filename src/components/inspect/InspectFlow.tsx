@@ -35,13 +35,17 @@ function InspectFlowInner() {
   const queryUrl = searchParams.get('url') ?? '';
   const hasValidQueryUrl = Boolean(queryUrl && isSupportedVideoUrl(queryUrl));
   const fromHome = searchParams.get('from') === 'home';
+  const navParam = searchParams.get('nav');
+
+  const initialNav: WorkspaceNavId =
+    navParam === 'projects' || navParam === 'history' ? navParam : 'dashboard';
 
   const [url, setUrl] = useState(hasValidQueryUrl ? queryUrl : '');
   const [nle] = useState<NleSoftware>('CapCut');
   const [phase, setPhase] = useState<Phase>(
     hasValidQueryUrl ? 'processing' : 'empty'
   );
-  const [activeNav, setActiveNav] = useState<WorkspaceNavId>('dashboard');
+  const [activeNav, setActiveNav] = useState<WorkspaceNavId>(initialNav);
   const [error, setError] = useState<string | null>(null);
   const [breakdown, setBreakdown] = useState<VideoBreakdownRecord | null>(null);
   const [selectedEffect, setSelectedEffect] = useState<string | null>(null);
@@ -144,6 +148,12 @@ function InspectFlowInner() {
     },
     [nle, applyBreakdown, readyMeta?.pendingFile]
   );
+
+  useEffect(() => {
+    if (navParam === 'projects' || navParam === 'history') {
+      setActiveNav(navParam);
+    }
+  }, [navParam]);
 
   useEffect(() => {
     if (phase !== 'processing') return;
@@ -365,7 +375,7 @@ function InspectFlowInner() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              className="flex min-h-full items-center justify-center p-6"
+              className="flex min-h-full items-center justify-center p-4 pb-safe sm:p-6"
             >
               <ProcessingSequence activeIndex={processIndex} liveLabel={streamLabel} />
             </motion.div>
@@ -375,58 +385,59 @@ function InspectFlowInner() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8 sm:px-6"
+              className="mx-auto flex w-full max-w-lg flex-col gap-6 px-4 py-6 pb-safe sm:max-w-4xl sm:px-6 sm:py-8 md:grid md:max-w-4xl md:grid-cols-[220px_1fr]"
             >
-              <div className="grid gap-6 md:grid-cols-[220px_1fr]">
-                <div className="mx-auto aspect-[9/16] w-full max-w-[200px] overflow-hidden rounded-xl border border-zinc-800 bg-black">
-                  {readyMeta.previewUrl ? (
-                    <video
-                      src={readyMeta.previewUrl}
-                      className="h-full w-full object-contain"
-                      muted
-                      playsInline
-                      controls
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center p-4 text-center text-xs text-zinc-500">
-                      Link queued for analysis
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-col justify-center">
-                  <h2 className="text-xl font-semibold text-white">{readyMeta.label}</h2>
-                  <p className="mt-1 text-sm text-zinc-500">{readyMeta.source}</p>
-                  <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-                    {readyMeta.pendingFile
-                      ? 'We will map beats, cuts, layered effects, and color from your upload. Full cloud vision currently works best with TikTok / Reel / Shorts links.'
-                      : 'We will download the clip, detect beats and cuts, map every layered effect, and build a step-by-step recreation guide for CapCut.'}
+              <div className="mx-auto aspect-[9/16] w-full max-w-[220px] overflow-hidden rounded-2xl border border-zinc-800 bg-black sm:max-w-[200px]">
+                {readyMeta.previewUrl ? (
+                  <video
+                    src={readyMeta.previewUrl}
+                    className="h-full w-full object-contain"
+                    muted
+                    playsInline
+                    controls
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center p-4 text-center text-xs text-zinc-500">
+                    Link queued for analysis
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col justify-center">
+                <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-zinc-500">
+                  Ready to analyze
+                </p>
+                <h2 className="mt-2 text-xl font-semibold text-white">{readyMeta.label}</h2>
+                <p className="mt-1 text-sm text-zinc-500">Source · {readyMeta.source}</p>
+                {localPreview ? (
+                  <p className="mt-2 font-mono text-xs text-zinc-500">
+                    Duration · {formatTimestamp(localPreview.duration)}
                   </p>
-                  {localPreview ? (
-                    <p className="mt-2 font-mono text-xs text-zinc-600">
-                      {formatTimestamp(localPreview.duration)}
-                    </p>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      readyMeta.pendingFile ? startLocalAnalysis() : startLinkFromReady()
-                    }
-                    className="mt-6 inline-flex w-fit items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-zinc-200"
-                  >
-                    <Play className="h-4 w-4" />
-                    {readyMeta.pendingFile ? 'Start analysis' : 'Start analysis'}
-                  </button>
-                  <p className="mt-3 text-[11px] text-zinc-600">
-                    Takes about 30–90 seconds · progress updates while we work
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    className="mt-3 w-fit text-xs text-zinc-500 transition hover:text-zinc-300"
-                  >
-                    Choose a different source
-                  </button>
-                </div>
+                ) : null}
+                <p className="mt-4 text-sm leading-relaxed text-zinc-400">
+                  {readyMeta.pendingFile
+                    ? 'We will map beats, cuts, layered effects, and color from your upload.'
+                    : 'We will download the clip, detect beats and cuts, map every layered effect, and build a step-by-step recreation guide.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    readyMeta.pendingFile ? startLocalAnalysis() : startLinkFromReady()
+                  }
+                  className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3.5 text-sm font-semibold text-black transition hover:bg-zinc-200 sm:w-fit sm:rounded-xl sm:py-2.5"
+                >
+                  <Play className="h-4 w-4" />
+                  Start analysis
+                </button>
+                <p className="mt-3 text-center text-[11px] text-zinc-600 sm:text-left">
+                  Takes about 30–90 seconds · progress updates while we work
+                </p>
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="mt-3 w-full text-center text-xs text-zinc-500 transition hover:text-zinc-300 sm:w-fit sm:text-left"
+                >
+                  Choose different video
+                </button>
               </div>
             </motion.div>
           ) : (

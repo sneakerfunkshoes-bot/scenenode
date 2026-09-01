@@ -30,7 +30,6 @@ import { DeconstructChat } from './DeconstructChat';
 import { WorkspaceShell, type WorkspaceNavId } from './WorkspaceShell';
 import { WorkspaceLibrary, type LibraryMode } from './WorkspaceLibrary';
 import type { InspectHistoryItem } from '@/lib/inspect-history';
-import { useDeviceLayout } from '@/hooks/useDeviceLayout';
 
 interface DeconstructCompleteProps {
   breakdown: VideoBreakdownRecord;
@@ -70,8 +69,6 @@ export function DeconstructComplete({
   libraryMode = null,
   onOpenHistoryItem,
 }: DeconstructCompleteProps) {
-  const deviceLayout = useDeviceLayout();
-  const isPhone = deviceLayout === 'phone';
   const [mobileTab, setMobileTab] = useState<'video' | 'color' | 'recipes' | 'guide'>(
     'video'
   );
@@ -302,65 +299,66 @@ export function DeconstructComplete({
             <p className="shrink-0 bg-zinc-900/40 px-4 py-2 text-xs text-zinc-400">{warning}</p>
           ) : null}
 
-          {isPhone ? (
-            <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden">
-              <div className="flex flex-wrap gap-1 border-b border-zinc-800/60 p-2">
-                {(
-                  [
-                    ['video', 'Video'],
-                    ['recipes', 'Breakdown'],
-                    ['color', 'Color'],
-                    ['guide', 'Guide'],
-                  ] as const
-                ).map(([id, label]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => setMobileTab(id)}
-                    className={
-                      mobileTab === id
-                        ? 'shrink-0 rounded-lg bg-zinc-900 px-3 py-2 text-xs text-white'
-                        : 'shrink-0 rounded-lg px-3 py-2 text-xs text-zinc-500'
-                    }
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <div className="min-h-0 flex-1 overflow-auto p-3">
-                {mobileTab === 'video' ? videoPanel : null}
-                {mobileTab === 'color' ? (
-                  <ColorGradingPanel data={color} styleHint={colorHint} layout="band" />
-                ) : null}
-                {mobileTab === 'recipes' ? (
-                  <div className="space-y-3">
-                    <MasterTimeline
-                      frames={frames}
-                      beats={beats}
-                      envelope={envelope}
-                      cuts={pacing}
-                      effects={effects}
-                      transitions={transitions}
-                      duration={breakdown.trackDuration}
-                      currentTime={currentTime}
-                      selectedEffectId={selectedEffect?.id}
-                      beatStatus={beatStatus}
-                      onSeek={jumpTo}
-                    />
-                    <PresetRecipePanel
-                      effects={effects}
-                      selectedId={selectedEffect?.id}
-                      onSelect={onEffect}
-                    />
-                  </div>
-                ) : null}
-                {mobileTab === 'guide' ? (
-                  <div className="h-[min(70vh,640px)]">{guide}</div>
-                ) : null}
-              </div>
+          {/* Mobile layout — CSS breakpoint, no JS wait */}
+          <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden md:hidden">
+            <div className="flex flex-wrap gap-1 border-b border-zinc-800/60 p-2">
+              {(
+                [
+                  ['video', 'Video'],
+                  ['recipes', 'Breakdown'],
+                  ['color', 'Color'],
+                  ['guide', 'Guide'],
+                ] as const
+              ).map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setMobileTab(id)}
+                  className={
+                    mobileTab === id
+                      ? 'shrink-0 rounded-lg bg-zinc-900 px-3 py-2 text-xs text-white'
+                      : 'shrink-0 rounded-lg px-3 py-2 text-xs text-zinc-500'
+                  }
+                >
+                  {label}
+                </button>
+              ))}
             </div>
-          ) : (
-            <div className="analysis-workspace workspace-fade-in min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+            <div className="min-h-0 flex-1 overflow-auto p-3 pb-safe">
+              {mobileTab === 'video' ? videoPanel : null}
+              {mobileTab === 'color' ? (
+                <ColorGradingPanel data={color} styleHint={colorHint} layout="band" />
+              ) : null}
+              {mobileTab === 'recipes' ? (
+                <div className="space-y-3">
+                  <MasterTimeline
+                    frames={frames}
+                    beats={beats}
+                    envelope={envelope}
+                    cuts={pacing}
+                    effects={effects}
+                    transitions={transitions}
+                    duration={breakdown.trackDuration}
+                    currentTime={currentTime}
+                    selectedEffectId={selectedEffect?.id}
+                    beatStatus={beatStatus}
+                    onSeek={jumpTo}
+                  />
+                  <PresetRecipePanel
+                    effects={effects}
+                    selectedId={selectedEffect?.id}
+                    onSelect={onEffect}
+                  />
+                </div>
+              ) : null}
+              {mobileTab === 'guide' ? (
+                <div className="h-[min(70vh,640px)]">{guide}</div>
+              ) : null}
+            </div>
+          </div>
+
+          {/* Desktop layout */}
+          <div className="analysis-workspace workspace-fade-in hidden min-h-0 flex-1 overflow-x-hidden overflow-y-auto md:block">
               <div
                 className={cn(
                   'grid min-h-[calc(100svh-8rem)] items-start gap-3 px-3 pt-2 xl:gap-4 xl:px-4',
@@ -373,7 +371,6 @@ export function DeconstructComplete({
               </div>
               <div className="px-3 pb-6 pt-3 xl:px-4">{colorBand}</div>
             </div>
-          )}
         </div>
       )}
     </WorkspaceShell>

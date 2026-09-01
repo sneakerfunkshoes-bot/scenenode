@@ -51,37 +51,48 @@ export function HeroSection() {
     [router]
   );
 
+  const heroContentClass = cn(
+    'relative z-10 flex w-full max-w-full flex-col transition-all duration-1000 ease-out',
+    isLaptopOpen
+      ? 'pointer-events-auto scale-100 opacity-100'
+      : 'pointer-events-none scale-95 opacity-0',
+    entering && 'scale-95 opacity-0',
+    /* mobile */
+    'mt-[min(48vh,420px)] items-start px-5 pb-8 pt-6 text-left',
+    /* desktop */
+          'md:my-auto md:mt-0 md:max-w-3xl md:items-center md:space-y-5 md:px-4 md:pb-0 md:pt-0 md:text-center sm:md:px-6'
+  );
+
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-black font-sans text-white selection:bg-zinc-500 selection:text-white">
       <Navbar onGetStarted={openWorkspace} />
 
       <section
         className={cn(
-          'relative flex min-h-[100svh] w-full items-center justify-center overflow-hidden pt-16 transition duration-700 ease-out',
+          'relative flex min-h-[100svh] w-full max-w-full flex-col justify-end overflow-hidden pb-safe pt-14 transition duration-700 ease-out',
+          'md:items-center md:justify-center md:pt-16',
           entering && 'scale-[1.03] opacity-40 blur-sm'
         )}
       >
         {mounted && <HeroVideo onLaptopOpen={revealHero} />}
 
-        <div
-          className={cn(
-            'relative z-10 my-auto flex max-w-3xl flex-col items-center space-y-5 px-4 text-center transition-all duration-1000 ease-out sm:space-y-6 sm:px-6',
-            isLaptopOpen
-              ? 'pointer-events-auto scale-100 opacity-100'
-              : 'pointer-events-none scale-95 opacity-0',
-            entering && 'scale-95 opacity-0'
-          )}
-        >
-          <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl md:text-7xl">
+        <div className={heroContentClass}>
+          <h1 className="text-[2rem] font-extrabold leading-tight tracking-tight text-white md:text-3xl lg:text-5xl xl:text-7xl">
             Edit Seamlessly.
           </h1>
 
-          <p className="mx-auto max-w-xl text-sm font-normal leading-relaxed text-zinc-300 sm:text-base md:text-lg">
+          <p className="mt-4 max-w-full text-[15px] font-normal leading-relaxed text-zinc-300 md:mx-auto md:mt-0 md:max-w-xl md:text-sm lg:text-lg">
             Get a step-by-step breakdown, beat maps, and transition guides to recreate
-            the exact edit by pasting link of an edit.
+            the exact edit by pasting the link of an edit.
           </p>
 
-          <GetStartedButton onClick={openWorkspace} pressed={entering} />
+          <div className="mt-6 w-full md:mt-2 md:w-auto">
+            <GetStartedButton
+              onClick={openWorkspace}
+              pressed={entering}
+              className="w-full md:w-auto"
+            />
+          </div>
         </div>
       </section>
 

@@ -60,8 +60,10 @@ export function WorkspaceShell({
     <div className={cn('flex h-[100svh] min-h-0 w-full overflow-hidden bg-black text-zinc-100', className)}>
       <aside
         className={cn(
-          'h-full shrink-0 flex-col border-r border-zinc-800/80 bg-zinc-950/90 transition-all duration-300',
-          sidebarVisible ? 'flex w-56' : 'hidden w-0 overflow-hidden border-0'
+          'h-full shrink-0 border-r border-zinc-800/80 bg-zinc-950/90 transition-all duration-300',
+          sidebarVisible
+            ? 'hidden w-0 overflow-hidden border-0 md:flex md:w-56 md:flex-col'
+            : 'hidden w-0 overflow-hidden border-0'
         )}
         aria-hidden={!sidebarVisible}
       >
@@ -129,32 +131,53 @@ export function WorkspaceShell({
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {sidebarVisible ? (
-          <div className="flex gap-1 border-b border-zinc-800/80 p-2 md:hidden">
-            {NAV.filter((n) => n.id !== 'vault').map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => onNavChange?.(item.id)}
-                className={cn(
-                  'flex-1 rounded-lg py-2 text-[11px]',
-                  activeNav === item.id ? 'bg-zinc-900 text-white' : 'text-zinc-500'
-                )}
-              >
-                {item.label.replace('My ', '')}
-              </button>
-            ))}
-            <Link
-              href="/download"
-              className="flex-1 rounded-lg py-2 text-center text-[11px] text-zinc-500"
-            >
-              Vault
-            </Link>
+          <div className="flex shrink-0 gap-1 overflow-x-auto border-b border-zinc-800/80 p-2 md:hidden">
+            {NAV.map((item) => {
+              const active = item.id === activeNav;
+              const label =
+                item.id === 'dashboard'
+                  ? 'Dashboard'
+                  : item.id === 'projects'
+                    ? 'Projects'
+                    : item.id === 'history'
+                      ? 'History'
+                      : 'Vault';
+
+              if (item.href) {
+                return (
+                  <Link
+                    key={item.id}
+                    href={item.href}
+                    className={cn(
+                      'min-w-[4.5rem] flex-1 whitespace-nowrap rounded-lg py-2.5 text-center text-[11px] font-medium',
+                      active ? 'bg-zinc-900 text-white' : 'text-zinc-500'
+                    )}
+                  >
+                    {label}
+                  </Link>
+                );
+              }
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onNavChange?.(item.id)}
+                  className={cn(
+                    'min-w-[4.5rem] flex-1 whitespace-nowrap rounded-lg py-2.5 text-[11px] font-medium',
+                    active ? 'bg-zinc-900 text-white' : 'text-zinc-500'
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
         ) : null}
 
-        <header className="shrink-0 bg-zinc-950/50 px-5 sm:px-7">
+        <header className="shrink-0 bg-zinc-950/50 px-4 safe-area-top sm:px-7">
           <div
             className={cn(
               'flex items-start justify-between gap-4',

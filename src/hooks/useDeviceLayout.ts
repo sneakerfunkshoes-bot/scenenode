@@ -2,37 +2,30 @@
 
 import { useEffect, useState } from 'react';
 
-/** True for phones / mobile browsers — not laptops or tablets treated as desktop. */
-export function isPhoneDevice(): boolean {
+const MOBILE_QUERY = '(max-width: 767px)';
+
+function readMobile(): boolean {
   if (typeof window === 'undefined') return false;
-
-  const ua = navigator.userAgent;
-
-  if (/iPhone|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua)) {
-    return true;
-  }
-
-  // Android phones include "Mobile"; most Android tablets omit it.
-  if (/Android/i.test(ua) && /Mobile/i.test(ua)) {
-    return true;
-  }
-
-  return false;
+  return window.matchMedia(MOBILE_QUERY).matches;
 }
 
-/**
- * Phone → tabbed analysis UI.
- * Laptop / desktop / tablet → full 3-column workspace (regardless of window width).
- */
-export function useDeviceLayout(): 'phone' | 'laptop' {
-  const [layout, setLayout] = useState<'phone' | 'laptop'>('laptop');
+/** Viewport < 768px — used for mobile vs desktop layout switching. */
+export function useIsMobile(): boolean {
+  const [mobile, setMobile] = useState(readMobile);
 
   useEffect(() => {
-    const update = () => setLayout(isPhoneDevice() ? 'phone' : 'laptop');
+    const mq = window.matchMedia(MOBILE_QUERY);
+    const update = () => setMobile(mq.matches);
     update();
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
   }, []);
 
-  return layout;
+  return mobile;
+}
+
+/** Alias — phone tab layout when viewport is below 768px. */
+export function useDeviceLayout(): 'phone' | 'laptop' {
+  const mobile = useIsMobile();
+  return mobile ? 'phone' : 'laptop';
 }
