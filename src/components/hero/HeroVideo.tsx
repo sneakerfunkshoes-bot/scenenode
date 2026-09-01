@@ -1,10 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const VIDEO_SRC = '/videos/laptop-animation.mp4?v=4k';
+const MOBILE_LAPTOP_SRC = '/images/hero-laptop-mobile.jpg';
 
 interface HeroVideoProps {
   className?: string;
@@ -26,6 +28,7 @@ export function HeroVideo({
   const startedRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(false);
+  const [mobileImageReady, setMobileImageReady] = useState(false);
 
   const fireLaptopOpen = useCallback(() => {
     if (laptopOpenFired.current) return;
@@ -74,6 +77,10 @@ export function HeroVideo({
   }, [fireLaptopOpen, freezeLastFrame, onEnded]);
 
   useEffect(() => {
+    fireLaptopOpen();
+  }, [fireLaptopOpen]);
+
+  useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
@@ -84,19 +91,19 @@ export function HeroVideo({
       void tryPlay();
     };
 
-    const onError = () => {
+    const onVideoError = () => {
       setError(true);
       fireLaptopOpen();
     };
 
     video.addEventListener('canplay', onCanPlay);
-    video.addEventListener('error', onError);
+    video.addEventListener('error', onVideoError);
 
     if (video.readyState >= 3) onCanPlay();
 
     return () => {
       video.removeEventListener('canplay', onCanPlay);
-      video.removeEventListener('error', onError);
+      video.removeEventListener('error', onVideoError);
     };
   }, [tryPlay, fireLaptopOpen]);
 
@@ -126,25 +133,44 @@ export function HeroVideo({
       animate={{ opacity: faded ? 0.22 : 1 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        'laptop-canvas-container hero-video-stage pointer-events-none absolute inset-x-0 flex items-center justify-center overflow-hidden',
-        'top-14 h-[min(46vh,400px)] md:inset-0 md:top-0 md:h-auto',
+        'laptop-canvas-container pointer-events-none absolute inset-x-0 flex items-center justify-center overflow-hidden',
+        'top-14 h-[min(48vh,400px)] bg-black md:inset-0 md:top-0 md:h-auto md:bg-transparent',
+        'hero-video-stage',
         className
       )}
     >
-      {!ready && !error && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="h-9 w-9 animate-spin rounded-full border border-[#E2E8F0]/25 border-t-[#E2E8F0]" />
-        </div>
-      )}
+      {/* Mobile — static laptop image (no animation) */}
+      <div className="relative flex h-full w-full items-center justify-center px-3 md:hidden">
+        {!mobileImageReady && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="h-9 w-9 animate-spin rounded-full border border-[#E2E8F0]/25 border-t-[#E2E8F0]" />
+          </div>
+        )}
+        <Image
+          src={MOBILE_LAPTOP_SRC}
+          alt="SceneNode on MacBook Pro"
+          width={900}
+          height={600}
+          priority
+          onLoad={() => setMobileImageReady(true)}
+          className={cn(
+            'h-full w-full max-w-[min(100%,360px)] object-contain object-center transition-opacity duration-500',
+            mobileImageReady ? 'opacity-100' : 'opacity-0'
+          )}
+        />
+      </div>
 
-      {!error && (
-        <>
+      {/* Desktop — laptop open animation */}
+      <div className="relative hidden h-full w-full items-center justify-center md:flex">
+        {!ready && !error && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="h-9 w-9 animate-spin rounded-full border border-[#E2E8F0]/25 border-t-[#E2E8F0]" />
+          </div>
+        )}
+
+        {!error && (
           <div
-            className={cn(
-              'relative flex w-full items-center justify-center',
-              'h-full max-w-[min(100%,340px)] px-2',
-              'md:h-[75vh] md:max-w-5xl md:px-0'
-            )}
+            className="relative flex h-[75vh] w-full max-w-5xl items-center justify-center"
             style={{
               WebkitMaskImage:
                 'linear-gradient(to bottom, #0c0c0c 0%, #0c0c0c 58%, rgba(12,12,12,0.45) 82%, transparent 100%)',
@@ -167,13 +193,8 @@ export function HeroVideo({
               aria-label="scenenode laptop animation"
             />
           </div>
-
-          <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-b from-transparent via-[#0c0c0c]/80 to-[#0c0c0c] md:hidden"
-            aria-hidden
-          />
-        </>
-      )}
+        )}
+      </div>
     </motion.div>
   );
 }

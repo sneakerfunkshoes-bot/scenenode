@@ -186,11 +186,7 @@ textarea {
 
 @media (max-width: 767px) {
   .laptop-canvas-container {
-    background-color: var(--hero-video-bg);
-  }
-
-  .laptop-video {
-    mix-blend-mode: screen;
+    background-color: #000000;
   }
 }
 
