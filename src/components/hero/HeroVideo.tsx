@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const VIDEO_SRC = '/videos/laptop-animation.mp4?v=4k';
-const MOBILE_QUERY = '(max-width: 767px)';
 
 interface HeroVideoProps {
   className?: string;
@@ -25,7 +24,6 @@ export function HeroVideo({
   const laptopOpenFired = useRef(false);
   const endedFired = useRef(false);
   const startedRef = useRef(false);
-  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(false);
 
@@ -37,63 +35,49 @@ export function HeroVideo({
 
   const freezeLastFrame = useCallback(() => {
     const video = videoRef.current;
-    if (!video || isMobileViewport) return;
+    if (!video) return;
     video.loop = false;
     video.pause();
     if (Number.isFinite(video.duration) && video.duration > 0) {
       video.currentTime = Math.max(0, video.duration - 0.05);
     }
-  }, [isMobileViewport]);
+  }, []);
 
   const tryPlay = useCallback(async () => {
     const video = videoRef.current;
-    if (!video) return;
-    if (!isMobileViewport && startedRef.current) return;
-    video.loop = isMobileViewport;
+    if (!video || startedRef.current || endedFired.current) return;
+
+    video.loop = false;
     try {
       startedRef.current = true;
       await video.play();
     } catch {
       startedRef.current = false;
+      fireLaptopOpen();
     }
-    if (isMobileViewport) fireLaptopOpen();
-  }, [fireLaptopOpen, isMobileViewport]);
+  }, [fireLaptopOpen]);
 
   const handleTimeUpdate = useCallback(() => {
-    if (isMobileViewport) return;
     const video = videoRef.current;
     if (!video || !video.duration) return;
     if (video.currentTime >= video.duration - 0.08) {
       fireLaptopOpen();
     }
-  }, [fireLaptopOpen, isMobileViewport]);
+  }, [fireLaptopOpen]);
 
   const handleEnded = useCallback(() => {
-    if (isMobileViewport) return;
-    freezeLastFrame();
-    fireLaptopOpen();
     if (endedFired.current) return;
     endedFired.current = true;
+    freezeLastFrame();
+    fireLaptopOpen();
     onEnded?.();
-  }, [fireLaptopOpen, freezeLastFrame, isMobileViewport, onEnded]);
-
-  useEffect(() => {
-    const mq = window.matchMedia(MOBILE_QUERY);
-    const apply = () => {
-      const mobile = mq.matches;
-      setIsMobileViewport(mobile);
-      const video = videoRef.current;
-      if (video) video.loop = mobile;
-      if (mobile) fireLaptopOpen();
-    };
-    apply();
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
-  }, [fireLaptopOpen]);
+  }, [fireLaptopOpen, freezeLastFrame, onEnded]);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+
+    video.loop = false;
 
     const onCanPlay = () => {
       setReady(true);
@@ -114,7 +98,7 @@ export function HeroVideo({
       video.removeEventListener('canplay', onCanPlay);
       video.removeEventListener('error', onError);
     };
-  }, [tryPlay, fireLaptopOpen, isMobileViewport]);
+  }, [tryPlay, fireLaptopOpen]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -124,14 +108,9 @@ export function HeroVideo({
       (entries) => {
         const visible = entries.some((e) => e.isIntersecting);
         if (visible) {
-          startedRef.current = false;
-          void tryPlay();
-        } else if (isMobileViewport) {
-          const video = videoRef.current;
-          if (video) {
-            video.pause();
-            startedRef.current = false;
-          }
+          if (!endedFired.current) void tryPlay();
+        } else {
+          videoRef.current?.pause();
         }
       },
       { threshold: 0.15 }
@@ -139,7 +118,7 @@ export function HeroVideo({
 
     observer.observe(container);
     return () => observer.disconnect();
-  }, [isMobileViewport, tryPlay]);
+  }, [tryPlay]);
 
   return (
     <motion.div
@@ -180,16 +159,15 @@ export function HeroVideo({
               muted
               playsInline
               preload="auto"
-              loop
+              loop={false}
               onTimeUpdate={handleTimeUpdate}
               onEnded={handleEnded}
-              className="laptop-video h-full w-full object-contain mix-blend-screen md:mix-blend-screen"
+              className="laptop-video h-full w-full object-contain mix-blend-screen"
               style={{ filter: 'contrast(140%) brightness(92%)' }}
               aria-label="scenenode laptop animation"
             />
           </div>
 
-          {/* Feather video floor into page background on mobile */}
           <div
             className="pointer-events-none absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-b from-transparent via-black/70 to-black md:hidden"
             aria-hidden
