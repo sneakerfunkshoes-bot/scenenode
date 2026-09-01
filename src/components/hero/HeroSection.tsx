@@ -68,7 +68,7 @@ export function HeroSection() {
   );
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-black font-sans text-white selection:bg-zinc-500 selection:text-white">
+    <div className="relative min-h-screen overflow-x-hidden bg-[var(--hero-video-bg)] font-sans text-white selection:bg-zinc-500 selection:text-white">
       <Navbar onGetStarted={openWorkspace} />
 
       <section

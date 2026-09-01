@@ -126,8 +126,8 @@ export function HeroVideo({
       animate={{ opacity: faded ? 0.22 : 1 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        'laptop-canvas-container pointer-events-none absolute inset-x-0 flex items-center justify-center overflow-hidden bg-black',
-        'top-14 h-[min(46vh,400px)] md:inset-0 md:top-0 md:h-auto md:bg-transparent',
+        'laptop-canvas-container hero-video-stage pointer-events-none absolute inset-x-0 flex items-center justify-center overflow-hidden',
+        'top-14 h-[min(46vh,400px)] md:inset-0 md:top-0 md:h-auto',
         className
       )}
     >
@@ -147,9 +147,9 @@ export function HeroVideo({
             )}
             style={{
               WebkitMaskImage:
-                'linear-gradient(to bottom, black 0%, black 52%, rgba(0,0,0,0.55) 78%, transparent 100%)',
+                'linear-gradient(to bottom, #0c0c0c 0%, #0c0c0c 58%, rgba(12,12,12,0.45) 82%, transparent 100%)',
               maskImage:
-                'linear-gradient(to bottom, black 0%, black 52%, rgba(0,0,0,0.55) 78%, transparent 100%)',
+                'linear-gradient(to bottom, #0c0c0c 0%, #0c0c0c 58%, rgba(12,12,12,0.45) 82%, transparent 100%)',
             }}
           >
             <video
@@ -169,7 +169,7 @@ export function HeroVideo({
           </div>
 
           <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-b from-transparent via-black/70 to-black md:hidden"
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-b from-transparent via-[#0c0c0c]/80 to-[#0c0c0c] md:hidden"
             aria-hidden
           />
         </>

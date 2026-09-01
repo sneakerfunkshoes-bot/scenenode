@@ -5,6 +5,7 @@
 :root {
   --obsidian: #050505;
   --obsidian-elevated: #0c0c0c;
+  --hero-video-bg: #0c0c0c;
   --obsidian-panel: rgba(12, 12, 12, 0.72);
   --silver: #e2e8f0;
   --silver-muted: #94a3b8;
@@ -185,12 +186,16 @@ textarea {
 
 @media (max-width: 767px) {
   .laptop-canvas-container {
-    background-color: #000000;
+    background-color: var(--hero-video-bg);
   }
 
   .laptop-video {
     mix-blend-mode: screen;
   }
+}
+
+.hero-video-stage {
+  background-color: var(--hero-video-bg);
 }
 
 #laptop-canvas,
