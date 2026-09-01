@@ -47,16 +47,16 @@ export function HeroVideo({
 
   const tryPlay = useCallback(async () => {
     const video = videoRef.current;
-    if (!video || startedRef.current) return;
+    if (!video) return;
+    if (!isMobileViewport && startedRef.current) return;
     video.loop = isMobileViewport;
     try {
       startedRef.current = true;
       await video.play();
-      if (isMobileViewport) fireLaptopOpen();
     } catch {
       startedRef.current = false;
-      if (isMobileViewport) fireLaptopOpen();
     }
+    if (isMobileViewport) fireLaptopOpen();
   }, [fireLaptopOpen, isMobileViewport]);
 
   const handleTimeUpdate = useCallback(() => {
@@ -83,10 +83,8 @@ export function HeroVideo({
       const mobile = mq.matches;
       setIsMobileViewport(mobile);
       const video = videoRef.current;
-      if (video) {
-        video.loop = mobile;
-        if (mobile) fireLaptopOpen();
-      }
+      if (video) video.loop = mobile;
+      if (mobile) fireLaptopOpen();
     };
     apply();
     mq.addEventListener('change', apply);
@@ -126,6 +124,7 @@ export function HeroVideo({
       (entries) => {
         const visible = entries.some((e) => e.isIntersecting);
         if (visible) {
+          startedRef.current = false;
           void tryPlay();
         } else if (isMobileViewport) {
           const video = videoRef.current;
@@ -135,7 +134,7 @@ export function HeroVideo({
           }
         }
       },
-      { threshold: 0.25 }
+      { threshold: 0.15 }
     );
 
     observer.observe(container);
@@ -148,8 +147,8 @@ export function HeroVideo({
       animate={{ opacity: faded ? 0.22 : 1 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        'laptop-canvas-container pointer-events-none absolute inset-x-0 flex items-center justify-center overflow-hidden',
-        'top-14 h-[min(48vh,420px)] md:inset-0 md:top-0 md:h-auto',
+        'laptop-canvas-container pointer-events-none absolute inset-x-0 flex items-center justify-center overflow-hidden bg-black',
+        'top-14 h-[min(46vh,400px)] md:inset-0 md:top-0 md:h-auto md:bg-transparent',
         className
       )}
     >
@@ -160,31 +159,42 @@ export function HeroVideo({
       )}
 
       {!error && (
-        <div
-          className={cn(
-            'relative flex w-full items-center justify-center',
-            'h-full max-w-[min(100%,360px)] px-4',
-            'md:h-[75vh] md:max-w-5xl md:px-0'
-          )}
-          style={{
-            WebkitMaskImage: 'linear-gradient(to bottom, black 70%, transparent 98%)',
-            maskImage: 'linear-gradient(to bottom, black 70%, transparent 98%)',
-          }}
-        >
-          <video
-            ref={videoRef}
-            src={VIDEO_SRC}
-            autoPlay
-            muted
-            playsInline
-            preload="auto"
-            onTimeUpdate={handleTimeUpdate}
-            onEnded={handleEnded}
-            className="laptop-video h-full w-full object-contain mix-blend-screen"
-            style={{ filter: 'contrast(140%) brightness(92%)' }}
-            aria-label="scenenode laptop animation"
+        <>
+          <div
+            className={cn(
+              'relative flex w-full items-center justify-center',
+              'h-full max-w-[min(100%,340px)] px-2',
+              'md:h-[75vh] md:max-w-5xl md:px-0'
+            )}
+            style={{
+              WebkitMaskImage:
+                'linear-gradient(to bottom, black 0%, black 52%, rgba(0,0,0,0.55) 78%, transparent 100%)',
+              maskImage:
+                'linear-gradient(to bottom, black 0%, black 52%, rgba(0,0,0,0.55) 78%, transparent 100%)',
+            }}
+          >
+            <video
+              ref={videoRef}
+              src={VIDEO_SRC}
+              autoPlay
+              muted
+              playsInline
+              preload="auto"
+              loop
+              onTimeUpdate={handleTimeUpdate}
+              onEnded={handleEnded}
+              className="laptop-video h-full w-full object-contain mix-blend-screen md:mix-blend-screen"
+              style={{ filter: 'contrast(140%) brightness(92%)' }}
+              aria-label="scenenode laptop animation"
+            />
+          </div>
+
+          {/* Feather video floor into page background on mobile */}
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-b from-transparent via-black/70 to-black md:hidden"
+            aria-hidden
           />
-        </div>
+        </>
       )}
     </motion.div>
   );

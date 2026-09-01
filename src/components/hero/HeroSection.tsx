@@ -35,6 +35,10 @@ export function HeroSection() {
 
   useEffect(() => {
     setMounted(true);
+    // Mobile: show headline/CTA immediately — don't wait for video autoplay
+    if (window.matchMedia('(max-width: 767px)').matches) {
+      setIsLaptopOpen(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -55,12 +59,12 @@ export function HeroSection() {
     'relative z-10 flex w-full max-w-full flex-col transition-all duration-1000 ease-out',
     isLaptopOpen
       ? 'pointer-events-auto scale-100 opacity-100'
-      : 'pointer-events-none scale-95 opacity-0',
+      : 'pointer-events-none scale-95 opacity-0 max-md:pointer-events-auto max-md:scale-100 max-md:opacity-100',
     entering && 'scale-95 opacity-0',
     /* mobile */
     'mt-[min(48vh,420px)] items-start px-5 pb-8 pt-6 text-left',
     /* desktop */
-          'md:my-auto md:mt-0 md:max-w-3xl md:items-center md:space-y-5 md:px-4 md:pb-0 md:pt-0 md:text-center sm:md:px-6'
+          'md:my-auto md:mt-0 md:max-w-3xl md:items-center md:space-y-5 md:px-4 md:pb-0 md:pt-0 md:text-center md:px-6'
   );
 
   return (

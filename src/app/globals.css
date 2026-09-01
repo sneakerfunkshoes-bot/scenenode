@@ -183,6 +183,16 @@ textarea {
   -webkit-tap-highlight-color: transparent;
 }
 
+@media (max-width: 767px) {
+  .laptop-canvas-container {
+    background-color: #000000;
+  }
+
+  .laptop-video {
+    mix-blend-mode: screen;
+  }
+}
+
 #laptop-canvas,
 #laptop-animation-canvas,
 .laptop-canvas,
