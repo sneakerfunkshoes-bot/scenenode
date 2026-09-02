@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { scrollToSectionId } from '@/lib/scroll-to-section';
 import { Navbar } from './Navbar';
@@ -22,6 +22,7 @@ export function HeroSection() {
   const [mounted, setMounted] = useState(false);
   const [isLaptopOpen, setIsLaptopOpen] = useState(false);
   const [entering, setEntering] = useState(false);
+  const [mobileAnalysisOpen, setMobileAnalysisOpen] = useState(false);
 
   const openWorkspace = useCallback(() => {
     if (entering) return;
@@ -31,17 +32,18 @@ export function HeroSection() {
     }, ENTER_MS);
   }, [entering, router]);
 
-  const scrollToAnalysis = useCallback(() => {
-    scrollToSectionId('reference-analysis');
+  const openMobileAnalysis = useCallback(() => {
+    setMobileAnalysisOpen(true);
+    window.setTimeout(() => scrollToSectionId('reference-analysis'), 80);
   }, []);
 
   const handleGetStarted = useCallback(() => {
     if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches) {
-      scrollToAnalysis();
+      openMobileAnalysis();
       return;
     }
     openWorkspace();
-  }, [openWorkspace, scrollToAnalysis]);
+  }, [openWorkspace, openMobileAnalysis]);
 
   const openExample = useCallback(
     (exampleId: string) => {
@@ -61,6 +63,9 @@ export function HeroSection() {
   useEffect(() => {
     const hash = window.location.hash.replace(/^#/, '');
     if (!hash) return;
+    if (hash === 'reference-analysis') {
+      setMobileAnalysisOpen(true);
+    }
     const t = window.setTimeout(() => scrollToSectionId(hash), 120);
     return () => window.clearTimeout(t);
   }, []);
@@ -70,7 +75,7 @@ export function HeroSection() {
       <Navbar onGetStarted={handleGetStarted} />
 
       {/* Mobile hero */}
-      <MobileHero onGetStarted={scrollToAnalysis} entering={entering} />
+      <MobileHero onGetStarted={openMobileAnalysis} entering={entering} />
 
       {/* Desktop — exact laptop animation from 1st draft */}
       <section
@@ -107,9 +112,21 @@ export function HeroSection() {
         </div>
       </section>
 
-      <MobileReferenceAnalysis />
+      <AnimatePresence>
+        {mobileAnalysisOpen ? (
+          <motion.div
+            key="mobile-analysis"
+            initial={{ opacity: 0, y: 28 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <MobileReferenceAnalysis />
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
-      <div className={cn('transition duration-700', entering && 'opacity-0')}>
+      <div className={cn('hidden transition duration-700 md:block', entering && 'opacity-0')}>
         <LandingSections onOpenExample={openExample} />
         <SiteFooter />
       </div>

@@ -114,21 +114,10 @@ export function MobileReferenceAnalysis({
     <section
       id={variant === 'landing' ? 'reference-analysis' : undefined}
       className={cn(
-        'scroll-mt-20 bg-black px-4 py-6 pb-safe md:hidden',
-        variant === 'landing' && 'border-t border-zinc-900/80 py-10',
+        'scroll-mt-20 bg-black px-4 py-8 pb-safe md:hidden',
         className
       )}
     >
-      {variant === 'landing' ? (
-        <header className="mb-6">
-          <h2 className="text-2xl font-bold tracking-tight text-white">Deconstruct any edit.</h2>
-          <p className="mt-2 text-sm leading-relaxed text-zinc-500">
-            Upload a reference edit or paste a link. SceneNode will analyze the edit and create a
-            step-by-step recreation guide.
-          </p>
-        </header>
-      ) : null}
-
       {/* Upload card */}
       <div className="rounded-2xl border border-zinc-800/90 bg-zinc-950/80 p-5">
         <p className="text-center text-[12px] font-bold uppercase tracking-[0.18em] text-zinc-200">

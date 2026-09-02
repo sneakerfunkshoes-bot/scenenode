@@ -8,7 +8,6 @@ import { GetStartedButton } from './GetStartedButton';
 
 const MOBILE_LAPTOP_SRC = '/images/hero-laptop-mobile.jpg';
 
-/** Brief delay before copy pops in on static mobile hero. */
 const COPY_REVEAL_MS = 900;
 
 const popUp = {
@@ -40,51 +39,46 @@ export function MobileHero({ onGetStarted, entering }: MobileHeroProps) {
   }, []);
 
   return (
-    <section className="relative w-full overflow-hidden bg-black md:hidden">
-      {/* Android / phone — static MacBook image only */}
-      <div className="relative h-[min(78svh,620px)] w-full overflow-hidden">
+    <section className="relative flex min-h-[100svh] w-full flex-col overflow-hidden bg-black md:hidden">
+      {/* Laptop visual — compact so copy sits close underneath */}
+      <div className="relative h-[min(48svh,380px)] w-full shrink-0">
         <div
-          className="pointer-events-none absolute inset-x-[8%] bottom-[18%] h-16 rounded-[100%] bg-white/[0.06] blur-3xl"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute inset-x-[12%] bottom-[10%] h-8 bg-gradient-to-t from-white/10 via-white/5 to-transparent blur-xl"
+          className="pointer-events-none absolute inset-x-[8%] bottom-[12%] h-12 rounded-[100%] bg-white/[0.06] blur-3xl"
           aria-hidden
         />
 
-        <div className="absolute inset-x-0 top-0 h-[82%]">
-          <div className="relative mx-auto h-full w-full max-w-[100vw]">
-            {!imageReady && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-9 w-9 animate-spin rounded-full border border-white/20 border-t-white" />
-              </div>
+        <div className="relative mx-auto h-full w-full">
+          {!imageReady && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="h-9 w-9 animate-spin rounded-full border border-white/20 border-t-white" />
+            </div>
+          )}
+
+          <Image
+            src={MOBILE_LAPTOP_SRC}
+            alt="SceneNode on MacBook Pro"
+            fill
+            priority
+            sizes="100vw"
+            onLoad={() => setImageReady(true)}
+            className={cn(
+              'object-contain object-[center_55%] transition-opacity duration-500',
+              imageReady ? 'opacity-100' : 'opacity-0'
             )}
-
-            <Image
-              src={MOBILE_LAPTOP_SRC}
-              alt="SceneNode on MacBook Pro"
-              fill
-              priority
-              sizes="100vw"
-              onLoad={() => setImageReady(true)}
-              className={cn(
-                'object-contain object-[center_42%] transition-opacity duration-500',
-                imageReady ? 'opacity-100' : 'opacity-0'
-              )}
-              style={{ transform: 'scale(1.12)' }}
-            />
-          </div>
+            style={{ transform: 'scale(1.08)' }}
+          />
         </div>
 
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black via-black/90 to-transparent"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black via-black/80 to-transparent"
           aria-hidden
         />
       </div>
 
+      {/* Copy — pulled up tight to the laptop */}
       <div
         className={cn(
-          'relative z-10 px-5 pb-8 pt-2 transition duration-700',
+          'relative z-10 -mt-2 flex flex-1 flex-col justify-end px-5 pb-8 pt-0 transition duration-700',
           entering && 'scale-95 opacity-0'
         )}
       >
@@ -99,7 +93,7 @@ export function MobileHero({ onGetStarted, entering }: MobileHeroProps) {
         </motion.h1>
 
         <motion.p
-          className="mt-3 text-[15px] leading-relaxed text-zinc-400"
+          className="mt-2.5 text-[15px] leading-relaxed text-zinc-400"
           variants={popUp}
           initial="hidden"
           animate={copyVisible ? 'visible' : 'hidden'}
@@ -110,7 +104,7 @@ export function MobileHero({ onGetStarted, entering }: MobileHeroProps) {
         </motion.p>
 
         <motion.div
-          className="mt-6"
+          className="mt-5"
           variants={popUp}
           initial="hidden"
           animate={copyVisible ? 'visible' : 'hidden'}
