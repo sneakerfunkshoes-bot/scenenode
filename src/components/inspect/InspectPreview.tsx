@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { Pause, Play, Sparkles, Volume2 } from 'lucide-react';
 import { formatTimestamp } from '@/lib/utils';
-import { youtubeVideoId } from '@/lib/video-url';
+import { youtubeVideoId, socialEmbedUrl } from '@/lib/video-url';
 import { YouTubeInlinePlayer } from './YouTubeInlinePlayer';
+import { SocialVideoEmbed } from './SocialVideoEmbed';
+import { ReelPreviewFrame } from '@/components/deconstruct/ReelPreviewFrame';
 
 interface InspectPreviewProps {
   sourceUrl: string;
@@ -33,6 +35,7 @@ export function InspectPreview({
   const ytId = youtubeVideoId(sourceUrl);
   const hasLocalVideo = Boolean(previewVideoUrl);
   const hasYouTube = Boolean(ytId) && !hasLocalVideo;
+  const hasSocial = Boolean(socialEmbedUrl(sourceUrl)) && !hasLocalVideo && !hasYouTube;
 
   useEffect(() => {
     const video = videoRef.current;
@@ -80,7 +83,7 @@ export function InspectPreview({
         ) : null}
       </div>
 
-      <div className="relative aspect-video bg-black">
+      <ReelPreviewFrame maxWidthClass="max-w-full">
         {hasLocalVideo ? (
           <video
             ref={videoRef}
@@ -88,6 +91,7 @@ export function InspectPreview({
             src={previewVideoUrl!}
             className="absolute inset-0 h-full w-full object-contain"
             playsInline
+            muted
             preload="metadata"
             onTimeUpdate={handleTimeUpdate}
             onPlay={() => onPlayingChange(true)}
@@ -102,6 +106,8 @@ export function InspectPreview({
             onTimeChange={onTimeChange}
             onPlayingChange={onPlayingChange}
           />
+        ) : hasSocial ? (
+          <SocialVideoEmbed sourceUrl={sourceUrl} />
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-[radial-gradient(ellipse_at_center,_rgba(168,85,247,0.18),_transparent_65%)] px-6 text-center">
             <p className="font-mono text-[10px] uppercase tracking-widest text-zinc-300">
@@ -114,11 +120,11 @@ export function InspectPreview({
         )}
 
         {hasLocalVideo && selectedLabel ? (
-          <div className="pointer-events-none absolute left-3 top-3 rounded-lg border border-zinc-600 bg-black/70 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-zinc-200 backdrop-blur-sm">
+          <div className="pointer-events-none absolute left-3 top-3 z-10 rounded-lg border border-zinc-600 bg-black/70 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wide text-zinc-200 backdrop-blur-sm">
             Moment @ {formatTimestamp(currentTime)}
           </div>
         ) : null}
-      </div>
+      </ReelPreviewFrame>
 
       <div className="space-y-2 border-t border-zinc-800 px-3 py-3">
         <input

@@ -27,6 +27,7 @@ import { MasterTimeline } from './MasterTimeline';
 import { RecreationGuide } from './RecreationGuide';
 import { ReferenceVideoPanel } from './ReferenceVideoPanel';
 import { DeconstructChat } from './DeconstructChat';
+import { NleSelectorCompact } from './NleSelectorCompact';
 import { WorkspaceShell, type WorkspaceNavId } from './WorkspaceShell';
 import { WorkspaceLibrary, type LibraryMode } from './WorkspaceLibrary';
 import type { InspectHistoryItem } from '@/lib/inspect-history';
@@ -49,6 +50,7 @@ interface DeconstructCompleteProps {
   onNavChange?: (id: WorkspaceNavId) => void;
   libraryMode?: LibraryMode | null;
   onOpenHistoryItem?: (item: InspectHistoryItem) => void;
+  onNleChange?: (nle: NleSoftware) => void;
 }
 
 export function DeconstructComplete({
@@ -68,10 +70,9 @@ export function DeconstructComplete({
   onNavChange,
   libraryMode = null,
   onOpenHistoryItem,
+  onNleChange,
 }: DeconstructCompleteProps) {
-  const [mobileTab, setMobileTab] = useState<'video' | 'color' | 'recipes' | 'guide'>(
-    'video'
-  );
+  const [mobileTab, setMobileTab] = useState<'recipes' | 'color' | 'guide'>('recipes');
   const [activeStep, setActiveStep] = useState(1);
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [liveBeats, setLiveBeats] = useState<AnalyzedBeat[] | null>(null);
@@ -280,6 +281,11 @@ export function DeconstructComplete({
       ) : null}
       summary={libraryMode ? undefined : summaryMetrics}
       actions={libraryMode ? undefined : actions}
+      toolbar={
+        libraryMode || !onNleChange ? undefined : (
+          <NleSelectorCompact value={nle} onChange={onNleChange} label="Recreate in" />
+        )
+      }
       activeNav={activeNav}
       onNavChange={onNavChange}
       sidebarVisible={sidebarVisible}
@@ -299,12 +305,12 @@ export function DeconstructComplete({
             <p className="shrink-0 bg-zinc-900/40 px-4 py-2 text-xs text-zinc-400">{warning}</p>
           ) : null}
 
-          {/* Mobile layout — CSS breakpoint, no JS wait */}
+          {/* Mobile layout — reel preview pinned above tabs */}
           <div className="flex min-h-0 flex-1 flex-col overflow-x-hidden md:hidden">
-            <div className="flex flex-wrap gap-1 border-b border-zinc-800/60 p-2">
+            <div className="shrink-0 border-b border-zinc-800/60 p-3">{videoPanel}</div>
+            <div className="flex shrink-0 flex-wrap gap-1 border-b border-zinc-800/60 p-2">
               {(
                 [
-                  ['video', 'Video'],
                   ['recipes', 'Breakdown'],
                   ['color', 'Color'],
                   ['guide', 'Guide'],
@@ -325,7 +331,6 @@ export function DeconstructComplete({
               ))}
             </div>
             <div className="min-h-0 flex-1 overflow-auto p-3 pb-safe">
-              {mobileTab === 'video' ? videoPanel : null}
               {mobileTab === 'color' ? (
                 <ColorGradingPanel data={color} styleHint={colorHint} layout="band" />
               ) : null}

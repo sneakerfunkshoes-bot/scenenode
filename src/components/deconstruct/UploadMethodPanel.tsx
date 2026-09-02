@@ -4,6 +4,8 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { ArrowRight, Check, Link2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { isSupportedVideoUrl } from '@/lib/video-url';
+import type { NleSoftware } from '@/types/breakdown';
+import { NleSelectorCompact } from '@/components/deconstruct/NleSelectorCompact';
 
 const ACCEPT = 'video/mp4,video/quicktime,video/webm,video/*';
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
@@ -21,6 +23,8 @@ const DEFAULT_PLACEHOLDER = 'TikTok, Instagram Reel, or YouTube Short URL';
 export interface UploadMethodPanelProps {
   onSubmitUrl: (url: string) => void;
   onSelectFile: (file: File) => void;
+  nle: NleSoftware;
+  onNleChange: (nle: NleSoftware) => void;
   error?: string | null;
   className?: string;
 }
@@ -69,6 +73,8 @@ function ScanFrameIcon({ mode }: { mode: 'idle' | 'dragging' | 'accepted' }) {
 export function UploadMethodPanel({
   onSubmitUrl,
   onSelectFile,
+  nle,
+  onNleChange,
   error,
   className,
 }: UploadMethodPanelProps) {
@@ -272,10 +278,16 @@ export function UploadMethodPanel({
         )}
       >
         <div className="import-link-scan" aria-hidden />
-        <label className="mb-3 flex items-center gap-2 text-[11px] font-medium text-zinc-500">
+        <label className="mb-2 flex items-center gap-2 text-[11px] font-medium text-zinc-500">
           <Link2 className="h-3.5 w-3.5 text-zinc-500" />
           Paste a video link
         </label>
+
+        <NleSelectorCompact
+          value={nle}
+          onChange={onNleChange}
+          className="mb-3"
+        />
 
         <div className="flex flex-col gap-2.5">
           <div className="relative min-h-[44px] w-full overflow-hidden rounded-xl border border-zinc-800/90 bg-black/80 transition-[border-color] duration-300 focus-within:border-zinc-500">

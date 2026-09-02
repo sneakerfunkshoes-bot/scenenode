@@ -34,6 +34,8 @@ interface WorkspaceShellProps {
   status?: React.ReactNode | null;
   /** Optional metrics row under status (analysis summary). */
   summary?: React.ReactNode;
+  /** Compact row under title — e.g. NLE selector. */
+  toolbar?: React.ReactNode;
   actions?: React.ReactNode;
   activeNav?: WorkspaceNavId;
   onNavChange?: (id: WorkspaceNavId) => void;
@@ -49,6 +51,7 @@ export function WorkspaceShell({
   title = 'Reference Edit Analysis',
   status,
   summary,
+  toolbar,
   actions,
   activeNav = 'dashboard',
   onNavChange,
@@ -205,6 +208,12 @@ export function WorkspaceShell({
                   {title}
                 </h1>
               </div>
+
+              {toolbar ? (
+                <div className={cn('w-full min-w-0', onSidebarToggle && 'pl-[42px]')}>
+                  {toolbar}
+                </div>
+              ) : null}
 
               {status !== null && status !== undefined ? (
                 <div

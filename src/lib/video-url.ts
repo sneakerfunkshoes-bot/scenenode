@@ -31,6 +31,38 @@ export function youtubeVideoId(raw: string): string | null {
   return null;
 }
 
+export function instagramReelId(raw: string): string | null {
+  try {
+    const u = new URL(raw.trim());
+    const host = u.hostname.replace(/^www\./, '');
+    if (!host.includes('instagram.com')) return null;
+    const match = u.pathname.match(/\/(reel|p)\/([^/?#]+)/);
+    return match?.[2] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function tiktokVideoId(raw: string): string | null {
+  try {
+    const u = new URL(raw.trim());
+    const host = u.hostname.replace(/^www\./, '');
+    if (!host.includes('tiktok.com')) return null;
+    const match = u.pathname.match(/\/video\/(\d+)/);
+    return match?.[1] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function socialEmbedUrl(raw: string): string | null {
+  const ig = instagramReelId(raw);
+  if (ig) return `https://www.instagram.com/reel/${ig}/embed`;
+  const tt = tiktokVideoId(raw);
+  if (tt) return `https://www.tiktok.com/embed/v2/${tt}`;
+  return null;
+}
+
 export function isSupportedVideoUrl(raw: string): boolean {
   try {
     const u = new URL(raw.trim());

@@ -133,30 +133,34 @@ export function HeroVideo({
       animate={{ opacity: faded ? 0.22 : 1 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        'laptop-canvas-container pointer-events-none absolute inset-x-0 flex items-center justify-center overflow-hidden',
-        'top-14 h-[min(48vh,400px)] bg-black md:inset-0 md:top-0 md:h-auto md:bg-transparent',
+        'laptop-canvas-container pointer-events-none absolute inset-x-0 overflow-hidden',
+        'top-0 h-[min(68svh,560px)] bg-black md:inset-0 md:top-0 md:h-auto md:bg-transparent',
         'hero-video-stage',
         className
       )}
     >
-      {/* Mobile — static laptop image (no animation) */}
-      <div className="relative flex h-full w-full items-center justify-center px-3 md:hidden">
+      {/* Mobile — full-bleed laptop image (black bg covers hero top) */}
+      <div className="relative h-full w-full md:hidden">
         {!mobileImageReady && (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center bg-black">
             <div className="h-9 w-9 animate-spin rounded-full border border-[#E2E8F0]/25 border-t-[#E2E8F0]" />
           </div>
         )}
         <Image
           src={MOBILE_LAPTOP_SRC}
           alt="SceneNode on MacBook Pro"
-          width={900}
-          height={600}
+          fill
           priority
+          sizes="100vw"
           onLoad={() => setMobileImageReady(true)}
           className={cn(
-            'h-full w-full max-w-[min(100%,360px)] object-contain object-center transition-opacity duration-500',
+            'object-cover object-[center_18%] transition-opacity duration-500',
             mobileImageReady ? 'opacity-100' : 'opacity-0'
           )}
+        />
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black via-black/85 to-transparent"
+          aria-hidden
         />
       </div>
 

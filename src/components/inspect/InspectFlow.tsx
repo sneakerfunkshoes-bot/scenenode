@@ -21,6 +21,10 @@ import type { NleSoftware, VideoBreakdownRecord } from '@/types/breakdown';
 import { DeconstructComplete } from '@/components/deconstruct/DeconstructComplete';
 import { ProcessingSequence } from '@/components/deconstruct/ProcessingSequence';
 import { UploadMethodPanel } from '@/components/deconstruct/UploadMethodPanel';
+import { NleSelectorCompact } from '@/components/deconstruct/NleSelectorCompact';
+import { ReelPreviewFrame } from '@/components/deconstruct/ReelPreviewFrame';
+import { SocialVideoEmbed } from '@/components/inspect/SocialVideoEmbed';
+import { socialEmbedUrl } from '@/lib/video-url';
 import { WorkspaceLibrary } from '@/components/deconstruct/WorkspaceLibrary';
 import {
   WorkspaceShell,
@@ -41,7 +45,7 @@ function InspectFlowInner() {
     navParam === 'projects' || navParam === 'history' ? navParam : 'dashboard';
 
   const [url, setUrl] = useState(hasValidQueryUrl ? queryUrl : '');
-  const [nle] = useState<NleSoftware>('CapCut');
+  const [nle, setNle] = useState<NleSoftware>('CapCut');
   const [phase, setPhase] = useState<Phase>(
     hasValidQueryUrl ? 'processing' : 'empty'
   );
@@ -277,9 +281,21 @@ function InspectFlowInner() {
     if (typeof time === 'number') setCurrentTime(time);
   };
 
+  const handleNleChange = useCallback(
+    (next: NleSoftware) => {
+      setNle(next);
+      setBreakdown((prev) => (prev ? { ...prev, nleSoftware: next } : prev));
+    },
+    []
+  );
+
   const handleOpenStudio = () => {
     // Legacy Breakdown Studio removed — keep the user in the analysis workspace.
   };
+
+  const nleToolbar = (
+    <NleSelectorCompact value={nle} onChange={handleNleChange} label="Recreate in" />
+  );
 
   const enterMotion = useMemo(
     () =>
@@ -325,6 +341,7 @@ function InspectFlowInner() {
           onNavChange={handleNavChange}
           libraryMode={libraryMode}
           onOpenHistoryItem={handleOpenHistoryItem}
+          onNleChange={handleNleChange}
         />
       </motion.div>
     );
@@ -340,6 +357,7 @@ function InspectFlowInner() {
         title={shellTitle}
         activeNav={activeNav}
         onNavChange={handleNavChange}
+        toolbar={libraryMode || phase === 'empty' ? undefined : nleToolbar}
         status={
           libraryMode ? (
             <span>
@@ -387,21 +405,24 @@ function InspectFlowInner() {
               exit={{ opacity: 0 }}
               className="mx-auto flex w-full max-w-lg flex-col gap-6 px-4 py-6 pb-safe sm:max-w-4xl sm:px-6 sm:py-8 md:grid md:max-w-4xl md:grid-cols-[220px_1fr]"
             >
-              <div className="mx-auto aspect-[9/16] w-full max-w-[220px] overflow-hidden rounded-2xl border border-zinc-800 bg-black sm:max-w-[200px]">
+              <ReelPreviewFrame maxWidthClass="max-w-[220px] sm:max-w-[200px]">
                 {readyMeta.previewUrl ? (
                   <video
                     src={readyMeta.previewUrl}
-                    className="h-full w-full object-contain"
+                    className="absolute inset-0 h-full w-full object-contain"
                     muted
                     playsInline
                     controls
+                    preload="metadata"
                   />
+                ) : readyMeta.pendingUrl && socialEmbedUrl(readyMeta.pendingUrl) ? (
+                  <SocialVideoEmbed sourceUrl={readyMeta.pendingUrl} />
                 ) : (
-                  <div className="flex h-full items-center justify-center p-4 text-center text-xs text-zinc-500">
+                  <div className="absolute inset-0 flex items-center justify-center p-4 text-center text-xs text-zinc-500">
                     Link queued for analysis
                   </div>
                 )}
-              </div>
+              </ReelPreviewFrame>
               <div className="flex flex-col justify-center">
                 <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-zinc-500">
                   Ready to analyze
@@ -448,6 +469,8 @@ function InspectFlowInner() {
               exit={{ opacity: 0 }}
             >
               <UploadMethodPanel
+                nle={nle}
+                onNleChange={handleNleChange}
                 onSubmitUrl={(link) => {
                   setUrl(link);
                   setReadyMeta({
@@ -455,8 +478,8 @@ function InspectFlowInner() {
                     source: link,
                     pendingUrl: link,
                   });
+                  setPhase('ready');
                   setError(null);
-                  void runAnalyze(link);
                 }}
                 onSelectFile={handleSelectFile}
                 error={error}
