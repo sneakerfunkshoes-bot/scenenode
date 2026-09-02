@@ -4,7 +4,16 @@ import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CheckCircle2, Play } from 'lucide-react';
-import { createMockBreakdown } from '@/lib/breakdown-mock';
+import { NLE_LIST, createMockBreakdown } from '@/lib/breakdown-mock';
+import {
+  DEFAULT_EDITOR_ID,
+  editorIdFromNle,
+  getEditorProduct,
+  recreationGuideTitle,
+  type EditorProductId,
+  EDITOR_PRODUCTS,
+} from '@/lib/editor-products';
+import { takePendingInspectFile } from '@/lib/pending-inspect';
 import { setCachedBreakdown } from '@/lib/breakdown-cache';
 import { getExampleInspect } from '@/lib/example-inspects';
 import {
@@ -21,6 +30,7 @@ import type { NleSoftware, VideoBreakdownRecord } from '@/types/breakdown';
 import { DeconstructComplete } from '@/components/deconstruct/DeconstructComplete';
 import { ProcessingSequence } from '@/components/deconstruct/ProcessingSequence';
 import { UploadMethodPanel } from '@/components/deconstruct/UploadMethodPanel';
+import { MobileReferenceAnalysis } from '@/components/deconstruct/MobileReferenceAnalysis';
 import { NleSelectorCompact } from '@/components/deconstruct/NleSelectorCompact';
 import { ReelPreviewFrame } from '@/components/deconstruct/ReelPreviewFrame';
 import { SocialVideoEmbed } from '@/components/inspect/SocialVideoEmbed';
@@ -44,8 +54,21 @@ function InspectFlowInner() {
   const initialNav: WorkspaceNavId =
     navParam === 'projects' || navParam === 'history' ? navParam : 'dashboard';
 
+  const editorParam = searchParams.get('editor');
+  const nleParam = searchParams.get('nle');
+
+  const initialEditor: EditorProductId = EDITOR_PRODUCTS.some((e) => e.id === editorParam)
+    ? (editorParam as EditorProductId)
+    : DEFAULT_EDITOR_ID;
+
+  const initialNle: NleSoftware =
+    nleParam && (NLE_LIST as string[]).includes(nleParam)
+      ? (nleParam as NleSoftware)
+      : getEditorProduct(initialEditor).nle;
+
   const [url, setUrl] = useState(hasValidQueryUrl ? queryUrl : '');
-  const [nle, setNle] = useState<NleSoftware>('CapCut');
+  const [editorId, setEditorId] = useState<EditorProductId>(initialEditor);
+  const [nle, setNle] = useState<NleSoftware>(initialNle);
   const [phase, setPhase] = useState<Phase>(
     hasValidQueryUrl ? 'processing' : 'empty'
   );
@@ -194,6 +217,13 @@ function InspectFlowInner() {
 
   useEffect(() => () => clearLocalPreview(), [clearLocalPreview]);
 
+  const guideTitle = recreationGuideTitle(editorId);
+
+  const handleEditorChange = useCallback((id: EditorProductId) => {
+    setEditorId(id);
+    setNle(getEditorProduct(id).nle);
+  }, []);
+
   const handleReset = () => {
     clearLocalPreview();
     setPhase('empty');
@@ -253,6 +283,18 @@ function InspectFlowInner() {
     };
   };
 
+  useEffect(() => {
+    const pending = takePendingInspectFile();
+    if (!pending) return;
+    if (pending.editorId && EDITOR_PRODUCTS.some((e) => e.id === pending.editorId)) {
+      const id = pending.editorId as EditorProductId;
+      setEditorId(id);
+      setNle(getEditorProduct(id).nle);
+    }
+    handleSelectFile(pending.file);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-time file handoff from landing
+  }, []);
+
   const startLocalAnalysis = () => {
     if (!readyMeta?.pendingFile || !localPreview) return;
     setPhase('processing');
@@ -284,6 +326,7 @@ function InspectFlowInner() {
   const handleNleChange = useCallback(
     (next: NleSoftware) => {
       setNle(next);
+      setEditorId(editorIdFromNle(next));
       setBreakdown((prev) => (prev ? { ...prev, nleSoftware: next } : prev));
     },
     []
@@ -342,6 +385,7 @@ function InspectFlowInner() {
           libraryMode={libraryMode}
           onOpenHistoryItem={handleOpenHistoryItem}
           onNleChange={handleNleChange}
+          guideTitle={guideTitle}
         />
       </motion.div>
     );
@@ -468,22 +512,47 @@ function InspectFlowInner() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              <UploadMethodPanel
-                nle={nle}
-                onNleChange={handleNleChange}
-                onSubmitUrl={(link) => {
-                  setUrl(link);
-                  setReadyMeta({
-                    label: 'Link ready',
-                    source: link,
-                    pendingUrl: link,
-                  });
-                  setPhase('ready');
-                  setError(null);
-                }}
-                onSelectFile={handleSelectFile}
-                error={error}
-              />
+              <div className="md:hidden">
+                <MobileReferenceAnalysis
+                  variant="workspace"
+                  navigateOnSubmit={false}
+                  className="border-0"
+                  error={error}
+                  onSubmitUrl={(link, ed) => {
+                    handleEditorChange(ed);
+                    setUrl(link);
+                    setReadyMeta({
+                      label: 'Link ready',
+                      source: link,
+                      pendingUrl: link,
+                    });
+                    setPhase('ready');
+                    setError(null);
+                  }}
+                  onSelectFile={(file, ed) => {
+                    handleEditorChange(ed);
+                    handleSelectFile(file);
+                  }}
+                />
+              </div>
+              <div className="hidden md:block">
+                <UploadMethodPanel
+                  nle={nle}
+                  onNleChange={handleNleChange}
+                  onSubmitUrl={(link) => {
+                    setUrl(link);
+                    setReadyMeta({
+                      label: 'Link ready',
+                      source: link,
+                      pendingUrl: link,
+                    });
+                    setPhase('ready');
+                    setError(null);
+                  }}
+                  onSelectFile={handleSelectFile}
+                  error={error}
+                />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

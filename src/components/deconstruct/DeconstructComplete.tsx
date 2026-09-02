@@ -51,6 +51,7 @@ interface DeconstructCompleteProps {
   libraryMode?: LibraryMode | null;
   onOpenHistoryItem?: (item: InspectHistoryItem) => void;
   onNleChange?: (nle: NleSoftware) => void;
+  guideTitle?: string;
 }
 
 export function DeconstructComplete({
@@ -71,6 +72,7 @@ export function DeconstructComplete({
   libraryMode = null,
   onOpenHistoryItem,
   onNleChange,
+  guideTitle = 'Recreation Guide',
 }: DeconstructCompleteProps) {
   const [mobileTab, setMobileTab] = useState<'recipes' | 'color' | 'guide'>('recipes');
   const [activeStep, setActiveStep] = useState(1);
@@ -230,6 +232,7 @@ export function DeconstructComplete({
       activeStepOrder={activeStep}
       highlightedEffectId={selectedEffect?.id}
       onActiveStepChange={setActiveStep}
+      title={guideTitle}
       footerTop={askAi}
       onFocusStep={(s) => {
         if (s.effectId) {

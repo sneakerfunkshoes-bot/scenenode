@@ -1,18 +1,29 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useMotionValueEvent, type MotionValue } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const VIDEO_SRC = '/videos/laptop-animation.mp4?v=4k';
-const MOBILE_LAPTOP_SRC = '/images/hero-laptop-mobile.jpg';
+
+/** Extra scale on top of the baked-in MP4 zoom (1 → ~1.38). */
+function zoomScale(progress: number): number {
+  const p = Math.min(1, Math.max(0, progress));
+  // Slow ease-in toward screen fill
+  const eased = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+  return 1 + eased * 0.38;
+}
 
 interface HeroVideoProps {
   className?: string;
   faded?: boolean;
   onEnded?: () => void;
+  /** Fires once when animation reaches the “inside the screen” phase. */
   onLaptopOpen?: () => void;
+  /** Normalized playback progress 0–1 for hero text fade / scroll sync. */
+  onProgress?: (progress: number) => void;
+  /** Optional scroll progress (0–1) to scrub the zoom when the hero is pinned. */
+  scrollProgress?: MotionValue<number>;
 }
 
 export function HeroVideo({
@@ -20,15 +31,20 @@ export function HeroVideo({
   faded = false,
   onEnded,
   onLaptopOpen,
+  onProgress,
+  scrollProgress,
 }: HeroVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const laptopOpenFired = useRef(false);
   const endedFired = useRef(false);
   const startedRef = useRef(false);
+  const scrubbingRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState(false);
-  const [mobileImageReady, setMobileImageReady] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const disabledScroll = useMotionValue(-1);
+  const scrubSource = scrollProgress ?? disabledScroll;
 
   const fireLaptopOpen = useCallback(() => {
     if (laptopOpenFired.current) return;
@@ -60,25 +76,39 @@ export function HeroVideo({
     }
   }, [fireLaptopOpen]);
 
+  const applyProgress = useCallback(
+    (p: number) => {
+      const clamped = Math.min(1, Math.max(0, p));
+      setProgress(clamped);
+      onProgress?.(clamped);
+      if (clamped >= 0.62) fireLaptopOpen();
+    },
+    [fireLaptopOpen, onProgress]
+  );
+
   const handleTimeUpdate = useCallback(() => {
     const video = videoRef.current;
     if (!video || !video.duration) return;
+
+    if (scrubbingRef.current) return;
+
+    const p = video.currentTime / video.duration;
+    applyProgress(p);
+
     if (video.currentTime >= video.duration - 0.08) {
       fireLaptopOpen();
     }
-  }, [fireLaptopOpen]);
+  }, [applyProgress, fireLaptopOpen]);
 
   const handleEnded = useCallback(() => {
     if (endedFired.current) return;
     endedFired.current = true;
+    setProgress(1);
+    onProgress?.(1);
     freezeLastFrame();
     fireLaptopOpen();
     onEnded?.();
-  }, [fireLaptopOpen, freezeLastFrame, onEnded]);
-
-  useEffect(() => {
-    fireLaptopOpen();
-  }, [fireLaptopOpen]);
+  }, [fireLaptopOpen, freezeLastFrame, onEnded, onProgress]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -107,6 +137,25 @@ export function HeroVideo({
     };
   }, [tryPlay, fireLaptopOpen]);
 
+  useMotionValueEvent(scrubSource, 'change', (v) => {
+    if (!scrollProgress || v < 0.04) {
+      scrubbingRef.current = false;
+      return;
+    }
+
+    const video = videoRef.current;
+    if (!video?.duration) return;
+
+    scrubbingRef.current = true;
+    video.pause();
+
+    const target = Math.min(video.duration - 0.05, v * video.duration);
+    if (Math.abs(video.currentTime - target) > 0.02) {
+      video.currentTime = target;
+    }
+    applyProgress(target / video.duration);
+  });
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -127,59 +176,32 @@ export function HeroVideo({
     return () => observer.disconnect();
   }, [tryPlay]);
 
+  const scale = zoomScale(progress);
+
   return (
     <motion.div
       ref={containerRef}
       animate={{ opacity: faded ? 0.22 : 1 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        'laptop-canvas-container pointer-events-none absolute inset-x-0 overflow-hidden',
-        'top-0 h-[min(68svh,560px)] bg-black md:inset-0 md:top-0 md:h-auto md:bg-transparent',
+        'laptop-canvas-container pointer-events-none absolute inset-0 hidden overflow-hidden md:block',
         'hero-video-stage',
         className
       )}
     >
-      {/* Mobile — full-bleed laptop image (black bg covers hero top) */}
-      <div className="relative h-full w-full md:hidden">
-        {!mobileImageReady && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black">
-            <div className="h-9 w-9 animate-spin rounded-full border border-[#E2E8F0]/25 border-t-[#E2E8F0]" />
-          </div>
-        )}
-        <Image
-          src={MOBILE_LAPTOP_SRC}
-          alt="SceneNode on MacBook Pro"
-          fill
-          priority
-          sizes="100vw"
-          onLoad={() => setMobileImageReady(true)}
-          className={cn(
-            'object-cover object-[center_18%] transition-opacity duration-500',
-            mobileImageReady ? 'opacity-100' : 'opacity-0'
-          )}
-        />
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black via-black/85 to-transparent"
-          aria-hidden
-        />
-      </div>
-
-      {/* Desktop — laptop open animation */}
-      <div className="relative hidden h-full w-full items-center justify-center md:flex">
+      <div className="absolute inset-0 flex items-center justify-center">
         {!ready && !error && (
-          <div className="absolute inset-0 flex items-center justify-center">
+          <div className="absolute inset-0 z-10 flex items-center justify-center">
             <div className="h-9 w-9 animate-spin rounded-full border border-[#E2E8F0]/25 border-t-[#E2E8F0]" />
           </div>
         )}
 
         {!error && (
           <div
-            className="relative flex h-[75vh] w-full max-w-5xl items-center justify-center"
+            className="relative flex h-[min(82vh,900px)] w-full max-w-[min(90vw,1200px)] items-center justify-center will-change-transform"
             style={{
-              WebkitMaskImage:
-                'linear-gradient(to bottom, #0c0c0c 0%, #0c0c0c 58%, rgba(12,12,12,0.45) 82%, transparent 100%)',
-              maskImage:
-                'linear-gradient(to bottom, #0c0c0c 0%, #0c0c0c 58%, rgba(12,12,12,0.45) 82%, transparent 100%)',
+              transform: `translate3d(0, ${progress * -2}%, 0) scale(${scale})`,
+              transition: 'transform 80ms linear',
             }}
           >
             <video
@@ -198,6 +220,12 @@ export function HeroVideo({
             />
           </div>
         )}
+
+        {/* Bottom vignette — blends into page */}
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-[28%] bg-gradient-to-t from-black via-black/50 to-transparent"
+          aria-hidden
+        />
       </div>
     </motion.div>
   );

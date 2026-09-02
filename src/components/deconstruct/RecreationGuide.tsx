@@ -12,6 +12,7 @@ interface RecreationGuideProps {
   onFocusStep?: (step: RecreationStepView) => void;
   onActiveStepChange?: (order: number) => void;
   footerTop?: ReactNode;
+  title?: string;
   className?: string;
 }
 
@@ -22,6 +23,7 @@ export function RecreationGuide({
   onFocusStep,
   onActiveStepChange,
   footerTop,
+  title = 'Recreation Guide',
   className,
 }: RecreationGuideProps) {
   const [open, setOpen] = useState(activeStepOrder);
@@ -51,7 +53,7 @@ export function RecreationGuide({
       <div className="shrink-0 border-b border-zinc-800/50 px-4 py-3">
         <div className="mb-2 flex items-center justify-between gap-2">
           <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">
-            Recreation Guide
+            {title}
           </h3>
           <span className="font-mono text-[10px] text-zinc-600">
             Step {active?.order ?? 1} of {steps.length}
