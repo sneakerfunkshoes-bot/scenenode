@@ -11,6 +11,7 @@ import {
   type EditorProductId,
 } from '@/lib/editor-products';
 import { setPendingInspectFile } from '@/lib/pending-inspect';
+import { RAZORPAY_AMOUNT_INR, ensurePaidAccess } from '@/lib/razorpay-checkout';
 import {
   EditorSelectorGrid,
 } from '@/components/deconstruct/EditorSelectorGrid';
@@ -53,7 +54,22 @@ export function MobileReferenceAnalysis({
   const canAnalyze = Boolean(selectedFile || linkValid);
 
   const goInspect = useCallback(
-    (params: { url?: string; file?: File }) => {
+    async (params: { url?: string; file?: File }) => {
+      try {
+        const paid = await ensurePaidAccess({
+          description: `Analyze edit · ₹${RAZORPAY_AMOUNT_INR}`,
+        });
+        if (!paid) {
+          setLocalError('Payment required to analyze. Tap Analyze again to pay ₹' + RAZORPAY_AMOUNT_INR + '.');
+          setSubmitting(false);
+          return;
+        }
+      } catch (err) {
+        setLocalError(err instanceof Error ? err.message : 'Payment failed.');
+        setSubmitting(false);
+        return;
+      }
+
       const product = getEditorProduct(editorId);
       const nle = product.nle;
       const editor = editorId;
@@ -61,6 +77,7 @@ export function MobileReferenceAnalysis({
       if (params.file) {
         if (onSelectFile) {
           onSelectFile(params.file, editorId);
+          setSubmitting(false);
           return;
         }
         setPendingInspectFile(params.file, editorId);
@@ -71,6 +88,7 @@ export function MobileReferenceAnalysis({
       if (params.url) {
         if (onSubmitUrl) {
           onSubmitUrl(params.url, editorId);
+          setSubmitting(false);
           return;
         }
         router.push(
@@ -78,7 +96,7 @@ export function MobileReferenceAnalysis({
         );
       }
     },
-    [editorId, navigateOnSubmit, onSelectFile, onSubmitUrl, router]
+    [editorId, onSelectFile, onSubmitUrl, router]
   );
 
   const pickFile = (file: File | undefined | null) => {
@@ -104,9 +122,9 @@ export function MobileReferenceAnalysis({
     setSubmitting(true);
     setLocalError(null);
     if (selectedFile) {
-      goInspect({ file: selectedFile });
+      void goInspect({ file: selectedFile });
     } else {
-      goInspect({ url: url.trim() });
+      void goInspect({ url: url.trim() });
     }
   };
 
@@ -184,7 +202,7 @@ export function MobileReferenceAnalysis({
             setSelectedFile(null);
             setLocalError(null);
             setSubmitting(true);
-            goInspect({ url: url.trim() });
+            void goInspect({ url: url.trim() });
           }}
           disabled={!linkValid || submitting}
           className={cn(
@@ -194,7 +212,7 @@ export function MobileReferenceAnalysis({
               : 'cursor-not-allowed bg-zinc-900 text-zinc-600'
           )}
         >
-          Analyze
+          {submitting ? 'Opening payment…' : `Pay ₹${RAZORPAY_AMOUNT_INR} & Analyze`}
           <ArrowRight className="h-4 w-4" />
         </button>
       </div>
@@ -214,7 +232,7 @@ export function MobileReferenceAnalysis({
             : 'cursor-not-allowed bg-zinc-800 text-zinc-500'
         )}
       >
-        Analyze &amp; Build Guide
+        Analyze &amp; Build Guide · ₹{RAZORPAY_AMOUNT_INR}
         <ArrowRight className="h-4 w-4" />
       </button>
 

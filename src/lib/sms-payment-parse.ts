@@ -1,12 +1,20 @@
+import { UPI_AMOUNT_INR } from '@/lib/upi-amounts';
+
+function checkoutPrefix(): string {
+  return String(UPI_AMOUNT_INR);
+}
+
 /** Extract INR amount from bank/UPI credit SMS text. */
 export function extractPaymentAmount(smsText: string): number | null {
-  // Prefer SceneNode checkout range 249.01–249.99
-  const checkoutMatch = smsText.match(/(?:rs\.?|inr|₹)\s*(249\.[0-9]{2})/i);
+  const base = checkoutPrefix();
+  const checkoutPattern = new RegExp(`(?:rs\\.?|inr|₹)\\s*(${base}\\.[0-9]{2})`, 'i');
+  const checkoutMatch = smsText.match(checkoutPattern);
   if (checkoutMatch?.[1]) {
     return Number(checkoutMatch[1]);
   }
 
-  const bareCheckout = smsText.match(/\b(249\.[0-9]{2})\b/);
+  const barePattern = new RegExp(`\\b(${base}\\.[0-9]{2})\\b`);
+  const bareCheckout = smsText.match(barePattern);
   if (bareCheckout?.[1] && /credited|received|upi|deposited|payment/i.test(smsText)) {
     return Number(bareCheckout[1]);
   }
@@ -41,6 +49,7 @@ export function extractSmsText(body: unknown): string {
     data.sms,
     data.content,
     data.msg,
+    data.sender,
     typeof data.data === 'string' ? data.data : null,
   ];
 
@@ -53,4 +62,11 @@ export function extractSmsText(body: unknown): string {
   } catch {
     return '';
   }
+}
+
+export function extractSmsSender(body: unknown): string | undefined {
+  if (!body || typeof body !== 'object') return undefined;
+  const data = body as Record<string, unknown>;
+  const sender = data.sender ?? data.from;
+  return typeof sender === 'string' ? sender : undefined;
 }

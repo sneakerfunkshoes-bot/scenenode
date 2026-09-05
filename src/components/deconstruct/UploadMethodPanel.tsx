@@ -4,6 +4,7 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { ArrowRight, Check, Link2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { isSupportedVideoUrl } from '@/lib/video-url';
+import { RAZORPAY_AMOUNT_INR, ensurePaidAccess } from '@/lib/razorpay-checkout';
 import type { NleSoftware } from '@/types/breakdown';
 import { NleSelectorCompact } from '@/components/deconstruct/NleSelectorCompact';
 
@@ -145,7 +146,22 @@ export function UploadMethodPanel({
     }
     setLocalError(null);
     setAnalyzing(true);
-    onSubmitUrl(trimmed);
+    void (async () => {
+      try {
+        const paid = await ensurePaidAccess({
+          description: `Analyze edit · ₹${RAZORPAY_AMOUNT_INR}`,
+        });
+        if (!paid) {
+          setLocalError(`Payment required. Pay ₹${RAZORPAY_AMOUNT_INR} to analyze.`);
+          setAnalyzing(false);
+          return;
+        }
+        onSubmitUrl(trimmed);
+      } catch (err) {
+        setLocalError(err instanceof Error ? err.message : 'Payment failed.');
+        setAnalyzing(false);
+      }
+    })();
   };
 
   const dropMode = accepted ? 'accepted' : dragging ? 'dragging' : 'idle';
@@ -334,7 +350,7 @@ export function UploadMethodPanel({
               </>
             ) : (
               <>
-                Analyze
+                {analyzing ? 'Opening payment…' : `Pay ₹${RAZORPAY_AMOUNT_INR} & Analyze`}
                 <ArrowRight className="import-analyze-arrow h-3.5 w-3.5" />
               </>
             )}

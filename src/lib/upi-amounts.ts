@@ -2,6 +2,9 @@
 export const UPI_AMOUNT_INR = 249;
 export const UPI_AMOUNT_MIN = 249.01;
 export const UPI_AMOUNT_MAX = 249.2;
+/** Fixed Razorpay checkout (paise). */
+export const RAZORPAY_AMOUNT_INR = 249;
+export const RAZORPAY_AMOUNT_PAISE = RAZORPAY_AMOUNT_INR * 100;
 
 export function formatInrAmount(amount: number): string {
   return amount.toFixed(2);

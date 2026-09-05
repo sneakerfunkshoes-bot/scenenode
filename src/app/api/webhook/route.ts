@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
+import { recordIncomingPayment } from '@/lib/incoming-payments';
 import { claimPendingPaymentByOrderHint } from '@/lib/script-payments';
-import { extractPaymentAmount, extractSmsText } from '@/lib/sms-payment-parse';
-import { isCheckoutAmountRange } from '@/lib/upi-payment';
+import { extractPaymentAmount, extractSmsSender, extractSmsText } from '@/lib/sms-payment-parse';
+import { UPI_WEBHOOK_SECRET_FALLBACK } from '@/lib/upi-config.server';
+import { amountsEqual, isCheckoutAmountRange } from '@/lib/upi-amounts';
 import { guardRateLimit } from '@/lib/security/api-guard';
 import { secretsEqual } from '@/lib/security/secrets';
 
@@ -9,9 +11,8 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 function webhookAuthorized(req: Request): boolean {
-  const secret = process.env.PAYMENT_WEBHOOK_SECRET?.trim();
-  // Never allow open webhooks in production
-  if (!secret) return false;
+  const secret =
+    process.env.PAYMENT_WEBHOOK_SECRET?.trim() || UPI_WEBHOOK_SECRET_FALLBACK;
 
   const url = new URL(req.url);
   const fromQuery = url.searchParams.get('secret') || url.searchParams.get('token');
@@ -74,6 +75,12 @@ export async function POST(request: Request) {
     }
 
     console.log('[webhook/sms] Matched decimal amount:', amount);
+
+    await recordIncomingPayment({
+      sender: extractSmsSender(body),
+      message: smsText,
+      amount,
+    });
 
     if (!isCheckoutAmountRange(amount)) {
       return NextResponse.json({

@@ -16,6 +16,7 @@ import {
 import { takePendingInspectFile } from '@/lib/pending-inspect';
 import { setCachedBreakdown } from '@/lib/breakdown-cache';
 import { getExampleInspect } from '@/lib/example-inspects';
+import { RAZORPAY_AMOUNT_INR, ensurePaidAccess } from '@/lib/razorpay-checkout';
 import {
   listInspectHistory,
   upsertInspectHistory,
@@ -69,9 +70,7 @@ function InspectFlowInner() {
   const [url, setUrl] = useState(hasValidQueryUrl ? queryUrl : '');
   const [editorId, setEditorId] = useState<EditorProductId>(initialEditor);
   const [nle, setNle] = useState<NleSoftware>(initialNle);
-  const [phase, setPhase] = useState<Phase>(
-    hasValidQueryUrl ? 'processing' : 'empty'
-  );
+  const [phase, setPhase] = useState<Phase>('empty');
   const [activeNav, setActiveNav] = useState<WorkspaceNavId>(initialNav);
   const [error, setError] = useState<string | null>(null);
   const [breakdown, setBreakdown] = useState<VideoBreakdownRecord | null>(null);
@@ -139,6 +138,23 @@ function InspectFlowInner() {
       if (!isSupportedVideoUrl(trimmed)) {
         setError('Use a TikTok, Instagram Reels, or YouTube Shorts URL.');
         setPhase('empty');
+        return;
+      }
+
+      try {
+        const paid = await ensurePaidAccess({
+          description: `Analyze edit · ₹${RAZORPAY_AMOUNT_INR}`,
+        });
+        if (!paid) {
+          setError(`Payment required. Pay ₹${RAZORPAY_AMOUNT_INR} to analyze.`);
+          setPhase('empty');
+          setUrl(trimmed);
+          return;
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Payment failed.');
+        setPhase('empty');
+        setUrl(trimmed);
         return;
       }
 
@@ -297,21 +313,36 @@ function InspectFlowInner() {
 
   const startLocalAnalysis = () => {
     if (!readyMeta?.pendingFile || !localPreview) return;
-    setPhase('processing');
-    setProcessIndex(0);
-    setStreamLabel('Preparing local reference…');
+    void (async () => {
+      try {
+        const paid = await ensurePaidAccess({
+          description: `Analyze edit · ₹${RAZORPAY_AMOUNT_INR}`,
+        });
+        if (!paid) {
+          setError(`Payment required. Pay ₹${RAZORPAY_AMOUNT_INR} to start analysis.`);
+          return;
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Payment failed.');
+        return;
+      }
 
-    window.setTimeout(() => {
-      const mock = createMockBreakdown(localPreview.objectUrl, nle);
-      mock.previewVideoUrl = localPreview.objectUrl;
-      mock.trackDuration = localPreview.duration || mock.trackDuration;
-      mock.previewLabel = localPreview.fileName;
-      setWarning(
-        'Local file preview is supported. Full cloud vision analysis currently requires a TikTok / Reel / Shorts link.'
-      );
-      applyBreakdown(mock, nle, localPreview.objectUrl);
-      setStreamLabel(null);
-    }, 4200);
+      setPhase('processing');
+      setProcessIndex(0);
+      setStreamLabel('Preparing local reference…');
+
+      window.setTimeout(() => {
+        const mock = createMockBreakdown(localPreview.objectUrl, nle);
+        mock.previewVideoUrl = localPreview.objectUrl;
+        mock.trackDuration = localPreview.duration || mock.trackDuration;
+        mock.previewLabel = localPreview.fileName;
+        setWarning(
+          'Local file preview is supported. Full cloud vision analysis currently requires a TikTok / Reel / Shorts link.'
+        );
+        applyBreakdown(mock, nle, localPreview.objectUrl);
+        setStreamLabel(null);
+      }, 4200);
+    })();
   };
 
   const startLinkFromReady = () => {
@@ -491,7 +522,7 @@ function InspectFlowInner() {
                   className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-5 py-3.5 text-sm font-semibold text-black transition hover:bg-zinc-200 sm:w-fit sm:rounded-xl sm:py-2.5"
                 >
                   <Play className="h-4 w-4" />
-                  Start analysis
+                  Start analysis · ₹{RAZORPAY_AMOUNT_INR}
                 </button>
                 <p className="mt-3 text-center text-[11px] text-zinc-600 sm:text-left">
                   Takes about 30–90 seconds · progress updates while we work

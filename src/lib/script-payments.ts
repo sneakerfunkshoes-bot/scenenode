@@ -16,6 +16,7 @@ export interface ScriptPaymentRecord {
   status: PaymentStatus;
   amount: number;
   gatewayRef?: string;
+  razorpayOrderId?: string;
   createdAt: string;
   updatedAt: string;
   paidAt?: string;
@@ -43,7 +44,10 @@ function newPaymentId(): string {
   return `SN${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 }
 
-export async function createPaymentSession(visitorId: string): Promise<ScriptPaymentRecord> {
+export async function createPaymentSession(
+  visitorId: string,
+  options?: { amount?: number; razorpayOrderId?: string }
+): Promise<ScriptPaymentRecord> {
   const store = await loadStore();
   const now = new Date().toISOString();
 
@@ -55,7 +59,8 @@ export async function createPaymentSession(visitorId: string): Promise<ScriptPay
     id: newPaymentId(),
     visitorId,
     status: 'pending',
-    amount: pickUniqueCheckoutAmount(usedPending),
+    amount: options?.amount ?? pickUniqueCheckoutAmount(usedPending),
+    razorpayOrderId: options?.razorpayOrderId,
     createdAt: now,
     updatedAt: now,
   };
@@ -67,6 +72,26 @@ export async function createPaymentSession(visitorId: string): Promise<ScriptPay
 
   await saveStore(store);
   return record;
+}
+
+export async function attachRazorpayOrderId(
+  paymentId: string,
+  razorpayOrderId: string
+): Promise<ScriptPaymentRecord | null> {
+  const store = await loadStore();
+  const record = store.records.find((r) => r.id === paymentId);
+  if (!record) return null;
+  record.razorpayOrderId = razorpayOrderId;
+  record.updatedAt = new Date().toISOString();
+  await saveStore(store);
+  return record;
+}
+
+export async function getPaymentByRazorpayOrderId(
+  razorpayOrderId: string
+): Promise<ScriptPaymentRecord | null> {
+  const store = await loadStore();
+  return store.records.find((r) => r.razorpayOrderId === razorpayOrderId) ?? null;
 }
 
 export async function getPaymentById(id: string): Promise<ScriptPaymentRecord | null> {

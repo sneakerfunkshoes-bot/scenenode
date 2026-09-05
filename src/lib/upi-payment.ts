@@ -1,4 +1,5 @@
 import 'server-only';
+import { UPI_PAYEE_ID, UPI_PAYEE_NAME } from '@/lib/upi-config.server';
 import {
   formatInrAmount,
   UPI_AMOUNT_INR,
@@ -19,17 +20,12 @@ export {
   pickUniqueCheckoutAmount,
 };
 
-/** Server-only. Never expose via NEXT_PUBLIC_* or client responses. */
-function getUpiPayeeId(): string {
-  const id = process.env.UPI_PAYEE_ID?.trim();
-  if (!id) {
-    throw new Error('UPI_PAYEE_ID is not configured.');
-  }
-  return id;
+export function getUpiPayeeId(): string {
+  return process.env.UPI_PAYEE_ID?.trim() || UPI_PAYEE_ID;
 }
 
-function getUpiPayeeName(): string {
-  return process.env.UPI_PAYEE_NAME?.trim() || 'scenenode';
+export function getUpiPayeeName(): string {
+  return process.env.UPI_PAYEE_NAME?.trim() || UPI_PAYEE_NAME;
 }
 
 /** Builds the UPI deep link. Call only from server code. */

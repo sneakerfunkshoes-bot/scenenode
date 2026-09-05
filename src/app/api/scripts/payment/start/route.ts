@@ -37,13 +37,6 @@ export async function POST(req: Request) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error('[payment/start]', err);
 
-    if (message.includes('UPI_PAYEE_ID')) {
-      return NextResponse.json(
-        { error: 'Payments are not configured. Set UPI_PAYEE_ID on the server.' },
-        { status: 503 }
-      );
-    }
-
     return NextResponse.json({ error: 'Could not start payment session.' }, { status: 500 });
   }
 }

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { scrollToSectionId } from '@/lib/scroll-to-section';
 import { Navbar } from './Navbar';
@@ -12,7 +12,6 @@ import { GetStartedButton } from './GetStartedButton';
 import { LandingSections } from './LandingSections';
 import { SiteFooter } from './SiteFooter';
 import { EnterWorkspaceOverlay } from '@/components/deconstruct/EnterWorkspaceOverlay';
-import { MobileReferenceAnalysis } from '@/components/deconstruct/MobileReferenceAnalysis';
 
 const WORKSPACE_PATH = '/inspect?workspace=1&from=home';
 const ENTER_MS = 780;
@@ -22,7 +21,6 @@ export function HeroSection() {
   const [mounted, setMounted] = useState(false);
   const [isLaptopOpen, setIsLaptopOpen] = useState(false);
   const [entering, setEntering] = useState(false);
-  const [mobileAnalysisOpen, setMobileAnalysisOpen] = useState(false);
 
   const openWorkspace = useCallback(() => {
     if (entering) return;
@@ -31,19 +29,6 @@ export function HeroSection() {
       router.push(WORKSPACE_PATH);
     }, ENTER_MS);
   }, [entering, router]);
-
-  const openMobileAnalysis = useCallback(() => {
-    setMobileAnalysisOpen(true);
-    window.setTimeout(() => scrollToSectionId('reference-analysis'), 80);
-  }, []);
-
-  const handleGetStarted = useCallback(() => {
-    if (typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches) {
-      openMobileAnalysis();
-      return;
-    }
-    openWorkspace();
-  }, [openWorkspace, openMobileAnalysis]);
 
   const openExample = useCallback(
     (exampleId: string) => {
@@ -63,19 +48,16 @@ export function HeroSection() {
   useEffect(() => {
     const hash = window.location.hash.replace(/^#/, '');
     if (!hash) return;
-    if (hash === 'reference-analysis') {
-      setMobileAnalysisOpen(true);
-    }
     const t = window.setTimeout(() => scrollToSectionId(hash), 120);
     return () => window.clearTimeout(t);
   }, []);
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-black font-sans text-white selection:bg-zinc-500 selection:text-white">
-      <Navbar onGetStarted={handleGetStarted} />
+      <Navbar onGetStarted={openWorkspace} />
 
-      {/* Mobile hero */}
-      <MobileHero onGetStarted={openMobileAnalysis} entering={entering} />
+      {/* Mobile hero — Get Started opens the next page with paste-link */}
+      <MobileHero onGetStarted={openWorkspace} entering={entering} />
 
       {/* Desktop — exact laptop animation from 1st draft */}
       <section
@@ -112,21 +94,7 @@ export function HeroSection() {
         </div>
       </section>
 
-      <AnimatePresence>
-        {mobileAnalysisOpen ? (
-          <motion.div
-            key="mobile-analysis"
-            initial={{ opacity: 0, y: 28 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 16 }}
-            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <MobileReferenceAnalysis />
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-
-      <div className={cn('hidden transition duration-700 md:block', entering && 'opacity-0')}>
+      <div className={cn('transition duration-700', entering && 'opacity-0')}>
         <LandingSections onOpenExample={openExample} />
         <SiteFooter />
       </div>
