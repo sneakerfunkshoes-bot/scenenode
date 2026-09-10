@@ -9,14 +9,13 @@ import {
   Menu,
   PanelLeftClose,
   Settings,
-  Vault,
   UserRound,
   X,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
-export type WorkspaceNavId = 'dashboard' | 'projects' | 'vault' | 'history';
+export type WorkspaceNavId = 'dashboard' | 'projects' | 'history';
 
 const NAV: Array<{
   id: WorkspaceNavId;
@@ -26,7 +25,6 @@ const NAV: Array<{
 }> = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'projects', label: 'My Projects', icon: FolderKanban },
-  { id: 'vault', label: 'Vault', icon: Vault, href: '/download' },
   { id: 'history', label: 'History', icon: History },
 ];
 

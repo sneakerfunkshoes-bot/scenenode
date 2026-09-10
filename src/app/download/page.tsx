@@ -1,11 +1,6 @@
-import type { Metadata } from 'next';
-import { DownloadHub } from '@/components/download/DownloadHub';
+import { redirect } from 'next/navigation';
 
-export const metadata: Metadata = {
-  title: 'Download AE Scripts | scenenode',
-  description: 'Download SceneNode After Effects script pack — Auto Edit, Beat Mark, and Vault.',
-};
-
+/** Script selling removed — send visitors to edit deconstruction. */
 export default function DownloadPage() {
-  return <DownloadHub />;
+  redirect('/inspect?workspace=1');
 }

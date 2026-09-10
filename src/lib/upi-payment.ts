@@ -32,7 +32,7 @@ export function getUpiPayeeName(): string {
 export function buildUpiPaymentUri(
   orderId: string,
   amount: number,
-  note = 'SceneNode AE Scripts'
+  note = 'SceneNode edit unlock'
 ): string {
   const params = new URLSearchParams({
     pa: getUpiPayeeId(),

@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       notes: {
         paymentId: payment.id,
         visitorId,
-        product: 'scenenode_unlock',
+        product: 'scenenode_deconstruct',
       },
     });
 

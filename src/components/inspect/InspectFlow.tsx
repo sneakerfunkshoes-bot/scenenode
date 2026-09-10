@@ -263,7 +263,6 @@ function InspectFlowInner() {
   };
 
   const handleNavChange = (id: WorkspaceNavId) => {
-    if (id === 'vault') return;
     setActiveNav(id);
   };
 

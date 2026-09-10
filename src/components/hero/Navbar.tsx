@@ -17,13 +17,11 @@ const DESKTOP_LINKS = [
   { href: '/#examples', label: 'Examples' },
   { href: '/#nles', label: 'Supported NLEs' },
   { href: '/inspect?workspace=1', label: 'Inspect' },
-  { href: '/download', label: 'Download' },
 ] as const;
 
 const MOBILE_WORKSPACE_LINKS = [
   { href: '/inspect?workspace=1', label: 'Dashboard' },
   { href: '/inspect?workspace=1&nav=projects', label: 'My Projects' },
-  { href: '/download', label: 'Vault' },
   { href: '/inspect?workspace=1&nav=history', label: 'History' },
 ] as const;
 
@@ -35,7 +33,6 @@ interface NavbarProps {
 }
 
 function linkActive(pathname: string, href: string): boolean {
-  if (href === '/download') return pathname === '/download';
   if (href.includes('/inspect')) return pathname.startsWith('/inspect');
   return pathname === href;
 }
