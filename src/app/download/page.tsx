@@ -245,8 +245,8 @@ export default function DownloadPage() {
       </div>
 
       {/* Live Purchase Social Proof Ticker */}
-      <div className="w-full max-w-xl bg-zinc-900/80 border border-zinc-800 rounded-lg p-2.5 text-center z-10 my-4 shadow-lg">
-        <p className="text-xs text-zinc-400 animate-pulse">
+      <div className="w-full max-w-xl bg-zinc-900/80 border border-zinc-800 rounded-xl py-4 px-6 text-center z-10 my-8 shadow-lg">
+        <p className="text-sm text-zinc-400 animate-pulse leading-relaxed">
           🔥 <span className="font-semibold text-white">{activeBuyer.name}</span> from <span className="font-semibold text-white">{activeBuyer.location}</span> just secured the scripts!
         </p>
       </div>
