@@ -17,11 +17,11 @@ function UrgencyTimer() {
 
   useEffect(() => {
     const TIMER_DURATION = 10 * 60 * 1000; // 10 minutes
-    let expiryTime: string | number = localStorage.getItem('scenenode_discount_expiry');
+    let expiryTime = localStorage.getItem('scenenode_discount_expiry');
 
     if (!expiryTime) {
-      expiryTime = Date.now() + TIMER_DURATION;
-      localStorage.setItem('scenenode_discount_expiry', expiryTime.toString());
+      expiryTime = (Date.now() + TIMER_DURATION).toString();
+      localStorage.setItem('scenenode_discount_expiry', expiryTime);
     }
 
     const interval = setInterval(() => {
