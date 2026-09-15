@@ -113,7 +113,7 @@ export default function DownloadPage() {
       <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"></div>
 
       <div className="relative z-10 mx-auto max-w-5xl px-6 py-20 md:px-12 flex flex-col md:flex-row items-center gap-12">
-        {/* Product Visual (Left Side) - Using Image #8 */}
+        {/* Product Visual (Left Side) */}
         <div className="w-full md:w-1/2 flex justify-center">
            <div className="relative group">
               <div className="absolute -inset-1 bg-zinc-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
@@ -141,7 +141,24 @@ export default function DownloadPage() {
             <h1 className="text-4xl font-extrabold tracking-tight md:text-5xl leading-tight">
               Scripts
             </h1>
-            <p className="text-lg leading-relaxed text-zinc-400 max-w-md">
+
+            {/* Product Descriptions */}
+            <div className="space-y-6 text-zinc-400 text-sm leading-relaxed">
+              <div className="space-y-2">
+                <h3 className="text-white font-bold text-base">SceneNode Auto Edit</h3>
+                <p>Stop wasting hours manually slicing raw footage frame by frame to match your project's tempo. This powerful automation script instantly analyzes your visual pacing and structures your clips into a seamless rhythm. It cuts down hours of tedious timeline assembly into a single click of execution.</p>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-white font-bold text-base">SceneNode Beat Mark</h3>
+                <p>Ditch the exhausting process of scrubbing through audio tracks and listening closely to place manual markers one by one. This script instantly scans your music file and snaps timeline markers directly to audio transients and beats. It guarantees pinpoint rhythm synchronization for every cut instantly.</p>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-white font-bold text-base">SceneNode Vault</h3>
+                <p>Stop digging through cluttered folders or rebuilding complex custom animations from scratch for every new project. This lightning-fast preset vault stores and applies your go-to design assets, effects, and styles instantly. It supercharges your daily editing workflow and keeps your creative momentum flowing without interruptions.</p>
+              </div>
+            </div>
+
+            <p className="text-zinc-500 text-xs italic pt-4">
               Complete .zip of SceneNode Auto Edit, Beat Mark, and Vault.
               One payment unlocks instant download for this browser.
             </p>
@@ -208,15 +225,11 @@ export default function DownloadPage() {
         </p>
       </div>
 
-      {/* Reseller Footer */}
+      {/* Footer / Reseller link */}
       <footer className="relative z-10 mt-20 pb-24 text-center px-6">
         <div className="space-y-4">
-           <div className="text-xs text-zinc-500 max-w-lg mx-auto leading-relaxed space-y-1">
-              <div className="text-zinc-300">• Selling price ₹{currentPrice}</div>
-              <div className="text-zinc-300">• Reseller commission ₹200 per sale (UPI payout)</div>
-           </div>
            <Link href="/dashboard/reseller" className="text-zinc-400 font-semibold hover:text-white transition-colors text-xs underline underline-offset-4">
-             Open reseller dashboard
+             Refer and earn. Open dashboard
            </Link>
         </div>
       </footer>
