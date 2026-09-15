@@ -105,7 +105,11 @@ export default function DownloadPage() {
   const minutes = Math.floor((timeLeft / 1000) / 60);
   const seconds = Math.floor((timeLeft / 1000) % 60);
   const activeBuyer = BUYERS[currentBuyerIndex];
-  const currentPrice = isExpired ? 999 : SCRIPT_BUNDLE_PRICE_INR;
+
+  // Updated Pricing Logic: ₹249 during sale, ₹499 after expiration
+  const salePrice = 249;
+  const expiredPrice = 499;
+  const currentPrice = isExpired ? expiredPrice : salePrice;
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#020617] text-white font-sans flex flex-col items-center justify-between p-6">
@@ -141,12 +145,12 @@ export default function DownloadPage() {
           {!isExpired && !unlocked && (
             <>
               <span className="text-3xl font-extrabold text-white">₹{currentPrice}</span>
-              <span className="text-lg text-gray-500 line-through">₹999</span>
+              <span className="text-lg text-gray-500 line-through">₹{expiredPrice}</span>
               <span className="bg-cyan-500/10 text-cyan-400 text-xs px-2 py-1 rounded-md font-semibold border border-cyan-500/20">50% OFF</span>
             </>
           )}
           {(isExpired || unlocked) && (
-            <span className="text-3xl font-extrabold text-white">₹{isExpired ? '999' : currentPrice}</span>
+            <span className="text-3xl font-extrabold text-white">₹{unlocked ? 'Paid' : expiredPrice}</span>
           )}
         </div>
 
@@ -177,8 +181,8 @@ export default function DownloadPage() {
         {/* Details list */}
         <div className="border-t border-gray-800/60 pt-4 space-y-2 text-xs text-gray-400">
           <div>• Selling price {unlocked ? 'Paid' : `₹${currentPrice}`}</div>
-          <div>• Reseller commission ₹{RESELLER_COMMISSION_INR} per sale (UPI payout)</div>
-          <div>• Platform share {unlocked ? 'Paid' : `₹${isExpired ? '499' : PLATFORM_SHARE_INR}`}</div>
+          <div>• Reseller commission ₹200 per sale (UPI payout)</div>
+          <div>• Platform share {unlocked ? 'Paid' : isExpired ? '₹299' : '₹49'}</div>
         </div>
       </div>
 
@@ -192,7 +196,7 @@ export default function DownloadPage() {
       {/* Footer / Reseller link */}
       <div className="text-center pb-4 z-10">
         <Link href="/dashboard/reseller" className="text-cyan-400 hover:underline text-xs">
-          Resell this bundle and earn ₹{RESELLER_COMMISSION_INR} per sale. Minimum UPI payout ₹{MIN_PAYOUT_INR}. Open reseller dashboard
+          Resell this bundle and earn ₹200 per sale. Minimum UPI payout ₹300. Open reseller dashboard
         </Link>
       </div>
     </main>
