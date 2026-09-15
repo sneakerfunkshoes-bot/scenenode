@@ -120,7 +120,7 @@ export default function DownloadPage() {
               <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl p-4 shadow-2xl">
                 <div className="aspect-video w-full max-w-md rounded-lg bg-zinc-800 flex items-center justify-center overflow-hidden">
                    <img
-                    src="/images/ae-preview.png"
+                    src="/images/panel.png"
                     alt="SceneNode After Effects"
                     className="object-cover w-full h-full opacity-90"
                    />
