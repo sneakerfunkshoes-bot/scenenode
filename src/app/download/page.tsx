@@ -26,6 +26,7 @@ const BUYERS = [
 export default function DownloadPage() {
   const [timeLeft, setTimeLeft] = useState<number>(TIMER_DURATION);
   const [isExpired, setIsExpired] = useState<boolean>(false);
+  const [showExpiredBanner, setShowExpiredBanner] = useState<boolean>(true);
   const [currentBuyerIndex, setCurrentBuyerIndex] = useState<number>(0);
   const [busy, setBusy] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
@@ -76,6 +77,16 @@ export default function DownloadPage() {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Hide the "Sale Ended" banner after 60 seconds of expiration
+  useEffect(() => {
+    if (isExpired) {
+      const timer = setTimeout(() => {
+        setShowExpiredBanner(false);
+      }, 60000);
+      return () => clearTimeout(timer);
+    }
+  }, [isExpired]);
 
   useEffect(() => {
     const tickerInterval = setInterval(() => {
@@ -147,7 +158,7 @@ export default function DownloadPage() {
               </div>
             </div>
           )}
-          {isExpired && !unlocked && (
+          {isExpired && !unlocked && showExpiredBanner && (
             <div className="bg-red-950/20 border border-red-900/40 rounded-xl p-3 text-center">
               <span className="text-xs text-red-400 font-medium">⚠️ Sale ended. Standard price applied.</span>
             </div>
@@ -245,8 +256,8 @@ export default function DownloadPage() {
       </div>
 
       {/* Live Purchase Social Proof Ticker */}
-      <div className="w-full max-w-xl bg-zinc-900/80 border border-zinc-800 rounded-xl py-4 px-6 text-center z-10 my-8 shadow-lg">
-        <p className="text-sm text-zinc-400 animate-pulse leading-relaxed">
+      <div className="relative z-10 w-full max-w-xl bg-zinc-900/80 border border-zinc-800 rounded-lg p-2.5 text-center my-6 shadow-lg">
+        <p className="text-xs text-zinc-400 animate-pulse">
           🔥 <span className="font-semibold text-white">{activeBuyer.name}</span> from <span className="font-semibold text-white">{activeBuyer.location}</span> just secured the scripts!
         </p>
       </div>

@@ -23,7 +23,7 @@ export function normalizeResellerCode(raw: string | null | undefined): string | 
 }
 
 export function siteOrigin(): string {
-  return (process.env.NEXT_PUBLIC_SITE_URL || 'https://scenenode.vercel.app').replace(/\/$/, '');
+  return (process.env.NEXT_PUBLIC_SITE_URL || 'https://snenenode.online').replace(/\/$/, '');
 }
 
 export function resellerShareUrl(code: string): string {
