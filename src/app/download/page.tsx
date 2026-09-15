@@ -124,18 +124,18 @@ export default function DownloadPage() {
         {/* LEFT COLUMN: Image, Timer, Pricing, and Instant Pay Button (Zero Friction) */}
         <div className="lg:col-span-5 bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 shadow-2xl backdrop-blur-md space-y-6 sticky top-6">
 
-          {/* Product Preview Card */}
-          <div className="w-full h-48 bg-zinc-800 rounded-xl border border-zinc-700 flex flex-col items-center justify-center p-4 text-center shadow-inner overflow-hidden">
-             <img
-                src="/images/panel.png"
-                alt="SceneNode Preview"
-                className="w-full h-full object-cover opacity-80"
-             />
-             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
-                <span className="text-xs font-mono tracking-widest text-zinc-400 mb-1">PRO SUITE</span>
-                <h3 className="text-lg font-bold text-white">SceneNode Scripts</h3>
-                <p className="text-xs text-zinc-400 mt-1">Auto Edit • Beat Mark • Vault</p>
-             </div>
+          {/* Product Preview Card - Fixed Overlap with auto height & padding */}
+          <div className="w-full bg-zinc-800 rounded-xl border border-zinc-700 flex flex-col items-center justify-center p-6 text-center shadow-inner space-y-3 relative overflow-hidden">
+            <img
+              src="/images/panel.png"
+              alt="SceneNode Preview"
+              className="absolute inset-0 w-full h-full object-cover opacity-30 pointer-events-none"
+            />
+            <div className="relative z-10 space-y-1">
+              <span className="text-xs font-mono tracking-widest text-zinc-400 uppercase">PRO SUITE</span>
+              <h3 className="text-xl font-bold text-white">SceneNode Scripts</h3>
+              <p className="text-xs text-zinc-400">Auto Edit • Beat Mark • Vault</p>
+            </div>
           </div>
 
           {/* Timer Banner */}
@@ -194,9 +194,13 @@ export default function DownloadPage() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Feature Breakdown & Descriptions */}
+        {/* RIGHT COLUMN */}
         <div className="lg:col-span-7 space-y-6">
           <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-6 space-y-6 backdrop-blur-sm">
+
+            <div className="border-b border-zinc-800/80 pb-3">
+              <h2 className="text-xl font-bold tracking-tight text-white">Scripts Overview</h2>
+            </div>
 
             {/* Script 1 */}
             <div className="space-y-1.5">
