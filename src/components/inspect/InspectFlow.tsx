@@ -95,6 +95,7 @@ function InspectFlowInner() {
 
   const bootedQueryUrl = useRef<string | null>(null);
   const loadedExample = useRef<string | null>(null);
+  const loadedRemix = useRef<string | null>(null);
   const localPreviewRef = useRef<string | null>(null);
 
   const clearLocalPreview = useCallback(() => {
@@ -215,6 +216,35 @@ function InspectFlowInner() {
     if (!example) return;
     loadedExample.current = exampleId;
     applyBreakdown(example.breakdown, example.nle, example.url);
+  }, [searchParams, applyBreakdown]);
+
+  useEffect(() => {
+    const remixCode = searchParams.get('remix');
+    if (!remixCode || loadedRemix.current === remixCode) return;
+    loadedRemix.current = remixCode;
+    void (async () => {
+      try {
+        const res = await fetch(`/api/remix?code=${encodeURIComponent(remixCode)}`, {
+          cache: 'no-store',
+        });
+        const data = (await res.json()) as {
+          remix?: {
+            sourceUrl: string;
+            nle: NleSoftware;
+            breakdown: VideoBreakdownRecord;
+          };
+          error?: string;
+        };
+        if (!res.ok || !data.remix) {
+          setError(data.error || 'Remix not found');
+          return;
+        }
+        setNle(data.remix.nle);
+        applyBreakdown(data.remix.breakdown, data.remix.nle, data.remix.sourceUrl);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Could not load remix');
+      }
+    })();
   }, [searchParams, applyBreakdown]);
 
   useEffect(() => {

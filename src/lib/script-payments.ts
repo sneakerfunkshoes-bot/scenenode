@@ -10,11 +10,15 @@ const PAYMENTS_FILE = path.join(getCacheDir(), 'script-payments.json');
 
 export type PaymentStatus = 'pending' | 'paid' | 'rejected' | 'expired';
 
+export type PaymentProduct = 'deconstruct' | 'scripts';
+
 export interface ScriptPaymentRecord {
   id: string;
   visitorId: string;
   status: PaymentStatus;
   amount: number;
+  product?: PaymentProduct;
+  referralCode?: string;
   gatewayRef?: string;
   razorpayOrderId?: string;
   createdAt: string;
@@ -46,7 +50,12 @@ function newPaymentId(): string {
 
 export async function createPaymentSession(
   visitorId: string,
-  options?: { amount?: number; razorpayOrderId?: string }
+  options?: {
+    amount?: number;
+    razorpayOrderId?: string;
+    product?: PaymentProduct;
+    referralCode?: string;
+  }
 ): Promise<ScriptPaymentRecord> {
   const store = await loadStore();
   const now = new Date().toISOString();
@@ -60,6 +69,8 @@ export async function createPaymentSession(
     visitorId,
     status: 'pending',
     amount: options?.amount ?? pickUniqueCheckoutAmount(usedPending),
+    product: options?.product ?? 'deconstruct',
+    referralCode: options?.referralCode,
     razorpayOrderId: options?.razorpayOrderId,
     createdAt: now,
     updatedAt: now,

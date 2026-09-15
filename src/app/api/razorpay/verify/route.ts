@@ -6,12 +6,16 @@ import {
 } from '@/lib/script-payments';
 import { verifyRazorpaySignature } from '@/lib/razorpay-server';
 import {
+  BUNDLE_COOKIE,
   DOWNLOAD_COOKIE,
   PAYMENT_SESSION_COOKIE,
   createDownloadToken,
   downloadCookieOptions,
   paymentSessionCookieOptions,
 } from '@/lib/scripts-download-auth';
+import { creditResellerSale } from '@/lib/reseller-store';
+import { emitTelemetry } from '@/lib/telemetry';
+import { PLATFORM_SHARE_INR, RESELLER_COMMISSION_INR } from '@/lib/script-catalog';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -45,7 +49,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Payment session not found.' }, { status: 404 });
     }
 
-    if (record.status !== 'paid') {
+    const wasUnpaid = record.status !== 'paid';
+    if (wasUnpaid) {
       record = await markPaymentPaid(record.id, paymentId);
     }
 
@@ -53,17 +58,43 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Could not mark payment paid.' }, { status: 500 });
     }
 
-    const token = createDownloadToken(record.id);
+    const isBundle = record.product === 'scripts';
+    const token = createDownloadToken(record.id, isBundle ? 'bundle' : 'download');
     if (!token) {
       return NextResponse.json({ error: 'Unlock unavailable.' }, { status: 503 });
+    }
+
+    if (wasUnpaid && isBundle && record.referralCode) {
+      const sale = await creditResellerSale({
+        code: record.referralCode,
+        paymentId: record.id,
+      });
+      if (sale) {
+        await emitTelemetry('script_resell_completed', {
+          payment_id: record.id,
+          reseller_code: sale.code,
+          commission_inr: RESELLER_COMMISSION_INR,
+          platform_share_inr: PLATFORM_SHARE_INR,
+        });
+      }
+    } else if (wasUnpaid && isBundle) {
+      await emitTelemetry('script_sale_completed', {
+        payment_id: record.id,
+        amount_inr: record.amount,
+      });
     }
 
     const res = NextResponse.json({
       unlocked: true,
       status: 'paid',
       paymentId: record.id,
+      product: record.product ?? 'deconstruct',
     });
-    res.cookies.set(DOWNLOAD_COOKIE, token, downloadCookieOptions());
+    res.cookies.set(
+      isBundle ? BUNDLE_COOKIE : DOWNLOAD_COOKIE,
+      token,
+      downloadCookieOptions()
+    );
     res.cookies.set(PAYMENT_SESSION_COOKIE, record.id, paymentSessionCookieOptions());
     return res;
   } catch (err) {

@@ -17,12 +17,15 @@ const DESKTOP_LINKS = [
   { href: '/#examples', label: 'Examples' },
   { href: '/#nles', label: 'Supported NLEs' },
   { href: '/inspect?workspace=1', label: 'Inspect' },
+  { href: '/download', label: 'Scripts' },
 ] as const;
 
 const MOBILE_WORKSPACE_LINKS = [
   { href: '/inspect?workspace=1', label: 'Dashboard' },
   { href: '/inspect?workspace=1&nav=projects', label: 'My Projects' },
   { href: '/inspect?workspace=1&nav=history', label: 'History' },
+  { href: '/download', label: 'Scripts' },
+  { href: '/dashboard/reseller', label: 'Reseller' },
 ] as const;
 
 const navLinkClass =

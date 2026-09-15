@@ -10,6 +10,8 @@ export function UsageTracker() {
 
   useEffect(() => {
     if (pathname.startsWith('/admin')) return;
+    if (pathname.startsWith('/command')) return;
+    if (pathname.startsWith('/ops')) return;
 
     try {
       const key = `${SESSION_KEY}:${pathname}`;

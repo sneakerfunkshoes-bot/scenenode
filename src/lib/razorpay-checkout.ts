@@ -88,17 +88,21 @@ export async function unlockAfterPayment(): Promise<boolean> {
 }
 
 /**
- * Opens Razorpay Checkout for ₹249. Resolves true when payment is verified + unlocked.
+ * Opens Razorpay Checkout. Resolves true when payment is verified + unlocked.
  */
 export async function payWithRazorpay(options?: {
   description?: string;
+  product?: 'deconstruct' | 'scripts';
   onDismiss?: () => void;
 }): Promise<boolean> {
   await loadRazorpayScript();
 
+  const product = options?.product ?? 'deconstruct';
   const orderRes = await fetch('/api/razorpay/order', {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
+    body: JSON.stringify({ product }),
   });
   const orderBody = (await orderRes.json()) as {
     error?: string;
@@ -107,7 +111,11 @@ export async function payWithRazorpay(options?: {
     amount?: number;
     currency?: string;
     paymentId?: string;
+    unlocked?: boolean;
+    amountInr?: number;
   };
+
+  if (orderBody.unlocked) return true;
 
   if (!orderRes.ok || !orderBody.keyId || !orderBody.orderId) {
     throw new Error(orderBody.error || 'Could not create Razorpay order.');
@@ -132,7 +140,11 @@ export async function payWithRazorpay(options?: {
       amount,
       currency,
       name: 'SceneNode',
-      description: options?.description || `Unlock SceneNode · ₹${RAZORPAY_AMOUNT_INR}`,
+      description:
+        options?.description ||
+        (product === 'scripts'
+          ? `After Effects script bundle · ₹${orderBody.amountInr ?? 499}`
+          : `Unlock SceneNode · ₹${orderBody.amountInr ?? RAZORPAY_AMOUNT_INR}`),
       order_id: orderId,
       theme: { color: '#0ea5e9' },
       handler: (response) => {
@@ -184,5 +196,5 @@ export async function ensurePaidAccess(options?: {
   description?: string;
 }): Promise<boolean> {
   if (await fetchUnlockStatus()) return true;
-  return payWithRazorpay(options);
+  return payWithRazorpay({ ...options, product: 'deconstruct' });
 }

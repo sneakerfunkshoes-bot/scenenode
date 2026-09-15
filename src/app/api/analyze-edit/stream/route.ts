@@ -19,6 +19,7 @@ import {
   recordError,
   visitorIdFromRequest,
 } from '@/lib/usage-stats';
+import { emitTelemetry } from '@/lib/telemetry';
 import {
   cleanupDir,
   createTempWorkDir,
@@ -126,6 +127,13 @@ export async function POST(req: Request) {
         warning?: string
       ) => {
         send('complete', { breakdown, source, warning });
+        void emitTelemetry('analyze_completed', {
+          source,
+          effect_count: breakdown.effects?.length ?? 0,
+          bpm: breakdown.bpm ?? null,
+          nle: breakdown.nleSoftware,
+          has_warning: Boolean(warning),
+        });
       };
 
       try {

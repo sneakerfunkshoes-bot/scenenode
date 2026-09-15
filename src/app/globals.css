@@ -892,3 +892,7 @@ textarea {
     transform: none;
   }
 }
+
+.command-terminal {
+  font-family: var(--font-command-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}

@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 
 export const PAYMENT_SESSION_COOKIE = 'scenenode_payment_session';
 export const DOWNLOAD_COOKIE = 'scenenode_scripts_download';
+export const BUNDLE_COOKIE = 'scenenode_bundle_download';
 const DOWNLOAD_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 function signingSecret(): string | null {
@@ -41,23 +42,29 @@ export function paymentSessionCookieOptions() {
   };
 }
 
-export function createDownloadToken(paymentId: string): string | null {
+export function createDownloadToken(
+  paymentId: string,
+  kind: 'download' | 'bundle' = 'download'
+): string | null {
   const secret = signingSecret();
   if (!secret) return null;
 
   const exp = Date.now() + DOWNLOAD_TTL_MS;
-  const payload = `download:${paymentId}:${exp}`;
+  const payload = `${kind}:${paymentId}:${exp}`;
   return `${payload}.${sign(payload, secret)}`;
 }
 
-export function verifyDownloadToken(token: string | null | undefined): string | null {
+export function verifyDownloadToken(
+  token: string | null | undefined,
+  kind: 'download' | 'bundle' = 'download'
+): string | null {
   if (!token) return null;
 
   const secret = signingSecret();
   if (!secret) return null;
 
   const [payload, sig] = token.split('.');
-  if (!payload || !sig || !payload.startsWith('download:')) return null;
+  if (!payload || !sig || !payload.startsWith(`${kind}:`)) return null;
 
   const parts = payload.split(':');
   const paymentId = parts[1];
@@ -78,7 +85,16 @@ export function verifyDownloadToken(token: string | null | undefined): string | 
 
 export function hasDownloadAccess(req: Request): boolean {
   const token = readCookie(req, DOWNLOAD_COOKIE);
-  return Boolean(verifyDownloadToken(token));
+  return Boolean(verifyDownloadToken(token, 'download'));
+}
+
+export function hasBundleAccess(req: Request): boolean {
+  const token = readCookie(req, BUNDLE_COOKIE);
+  return Boolean(verifyDownloadToken(token, 'bundle'));
+}
+
+export function readNamedCookie(req: Request, name: string): string | null {
+  return readCookie(req, name);
 }
 
 export function downloadCookieOptions() {

@@ -32,6 +32,64 @@ import { WorkspaceShell, type WorkspaceNavId } from './WorkspaceShell';
 import { WorkspaceLibrary, type LibraryMode } from './WorkspaceLibrary';
 import type { InspectHistoryItem } from '@/lib/inspect-history';
 
+function ShareRemixButton({
+  breakdown,
+  nle,
+  sourceUrl,
+}: {
+  breakdown: VideoBreakdownRecord;
+  nle: NleSoftware;
+  sourceUrl: string;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState('');
+
+  const share = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      const res = await fetch('/api/remix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sourceUrl: sourceUrl || breakdown.videoUrl,
+          nle,
+          breakdown,
+        }),
+      });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok || !data.url) throw new Error(data.error || 'Could not create remix link');
+      await navigator.clipboard.writeText(data.url);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Share failed');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => void share()}
+        disabled={busy}
+        className="rounded-lg bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800 disabled:opacity-50"
+      >
+        {busy ? 'Creating…' : copied ? 'Link copied' : 'Share remix'}
+      </button>
+      {error ? (
+        <p className="absolute right-0 top-full z-20 mt-1 whitespace-nowrap rounded bg-red-950 px-2 py-1 text-[10px] text-red-300">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 interface DeconstructCompleteProps {
   breakdown: VideoBreakdownRecord;
   nle: NleSoftware;
@@ -193,13 +251,16 @@ export function DeconstructComplete({
   );
 
   const actions = (
-    <button
-      type="button"
-      onClick={onReset}
-      className="rounded-lg px-3 py-1.5 text-xs text-zinc-400 transition hover:bg-zinc-900 hover:text-white"
-    >
-      New Analysis
-    </button>
+    <div className="flex items-center gap-2">
+      <ShareRemixButton breakdown={breakdown} nle={nle} sourceUrl={sourceUrl} />
+      <button
+        type="button"
+        onClick={onReset}
+        className="rounded-lg px-3 py-1.5 text-xs text-zinc-400 transition hover:bg-zinc-900 hover:text-white"
+      >
+        New Analysis
+      </button>
+    </div>
   );
 
   const videoPanel = (

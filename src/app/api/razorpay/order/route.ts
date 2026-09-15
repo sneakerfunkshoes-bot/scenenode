@@ -11,34 +11,64 @@ import {
 } from '@/lib/razorpay-server';
 import {
   PAYMENT_SESSION_COOKIE,
+  hasBundleAccess,
   hasDownloadAccess,
   paymentSessionCookieOptions,
+  readNamedCookie,
 } from '@/lib/scripts-download-auth';
 import { visitorIdFromRequest } from '@/lib/usage-stats';
+import {
+  REF_COOKIE,
+  SCRIPT_BUNDLE_PRICE_INR,
+  SCRIPT_BUNDLE_PRICE_PAISE,
+} from '@/lib/script-catalog';
+import { getPartner, normalizeResellerCode } from '@/lib/reseller-store';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    if (hasDownloadAccess(req)) {
-      return NextResponse.json({ unlocked: true, status: 'paid' });
+    const body = (await req.json().catch(() => ({}))) as {
+      product?: string;
+      ref?: string;
+    };
+    const product = body.product === 'scripts' ? 'scripts' : 'deconstruct';
+
+    if (product === 'deconstruct' && hasDownloadAccess(req)) {
+      return NextResponse.json({ unlocked: true, status: 'paid', product });
+    }
+    if (product === 'scripts' && hasBundleAccess(req)) {
+      return NextResponse.json({ unlocked: true, status: 'paid', product });
     }
 
+    const amountInr = product === 'scripts' ? SCRIPT_BUNDLE_PRICE_INR : RAZORPAY_AMOUNT_INR;
+    const amountPaise = product === 'scripts' ? SCRIPT_BUNDLE_PRICE_PAISE : RAZORPAY_AMOUNT_PAISE;
+
     const visitorId = visitorIdFromRequest(req);
+    const referralCode = normalizeResellerCode(
+      body.ref || readNamedCookie(req, REF_COOKIE)
+    );
+    const partner = referralCode ? await getPartner(referralCode) : null;
+    const attributedCode =
+      partner && partner.visitorId !== visitorId ? partner.code : undefined;
+
     const payment = await createPaymentSession(visitorId, {
-      amount: RAZORPAY_AMOUNT_INR,
+      amount: amountInr,
+      product,
+      referralCode: attributedCode,
     });
 
     const razorpay = getRazorpayClient();
     const order = await razorpay.orders.create({
-      amount: RAZORPAY_AMOUNT_PAISE,
+      amount: amountPaise,
       currency: 'INR',
       receipt: payment.id.slice(0, 40),
       notes: {
         paymentId: payment.id,
         visitorId,
-        product: 'scenenode_deconstruct',
+        product: product === 'scripts' ? 'scenenode_script_bundle' : 'scenenode_deconstruct',
+        referralCode: attributedCode || '',
       },
     });
 
@@ -50,7 +80,8 @@ export async function POST(req: Request) {
       amount: order.amount,
       currency: order.currency || 'INR',
       paymentId: payment.id,
-      amountInr: RAZORPAY_AMOUNT_INR,
+      amountInr,
+      product,
     });
     res.cookies.set(PAYMENT_SESSION_COOKIE, payment.id, paymentSessionCookieOptions());
     return res;

@@ -233,6 +233,12 @@ export function AdminPanel() {
             <p className="text-sm text-zinc-500">Usage overview and system health</p>
           </div>
           <div className="flex items-center gap-2">
+            <Link href="/admin/reseller-requests" className="rounded-lg border border-zinc-800 px-3 py-1.5 text-xs hover:border-zinc-600">
+              Reseller payouts
+            </Link>
+            <Link href="/command" className="rounded-lg border border-zinc-800 px-3 py-1.5 text-xs hover:border-zinc-600">
+              Command center
+            </Link>
             <Link href="/" className="rounded-lg border border-zinc-800 px-3 py-1.5 text-xs hover:border-zinc-600">
               Home
             </Link>
