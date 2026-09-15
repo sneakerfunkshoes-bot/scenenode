@@ -113,7 +113,7 @@ export default function DownloadPage() {
       <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"></div>
 
       {/* Top Header */}
-      <div className="max-w-5xl w-full text-center space-y-2 mt-6 z-10">
+      <div className="max-w-5xl w-full text-center space-y-2 mt-12 z-10">
         <span className="text-xs uppercase tracking-widest text-zinc-500 font-semibold">SCENENODE • AFTER EFFECTS</span>
         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Script Bundle</h1>
       </div>
