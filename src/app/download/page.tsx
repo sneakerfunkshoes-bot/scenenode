@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { payWithRazorpay } from '@/lib/razorpay-checkout';
 import {
@@ -10,70 +10,40 @@ import {
   SCRIPT_BUNDLE_PRICE_INR,
 } from '@/lib/script-catalog';
 
-const TIMER_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+const TIMER_DURATION = 10 * 60 * 1000; // 10 minutes
 
-// --- CRO Components ---
+const BUYERS = [
+  { name: 'Rahul Sharma', location: 'Maharashtra' },
+  { name: 'Priya Patel', location: 'Gujarat' },
+  { name: 'Amit Verma', location: 'Delhi' },
+  { name: 'Sneha Iyer', location: 'Karnataka' },
+  { name: 'Arjun Reddy', location: 'Telangana' },
+  { name: 'Ananya Das', location: 'West Bengal' },
+  { name: 'Rohan Nair', location: 'Kerala' },
+  { name: 'Neha Gupta', location: 'Uttar Pradesh' },
+  { name: 'Karan Malhotra', location: 'Punjab' },
+  { name: 'Divya Rao', location: 'Tamil Nadu' }
+];
 
-function SocialProofTicker() {
-  const [currentNotification, setCurrentNotification] = useState('');
-
-  const NAMES = [
-    'Rahul S.', 'Priya Sharma', 'Amit Patel', 'Fatima Khan',
-    'Arjun Reddy', 'Ananya M.', 'Vikram Singh', 'Sneha K.',
-    'Rohan V.', 'Ishita G.', 'Karan P.', 'Meera L.'
-  ];
-  const CITIES = [
-    'Mumbai', 'Bengaluru', 'Delhi', 'Chennai', 'Kolkata',
-    'Pune', 'Hyderabad', 'Jaipur', 'Ahmedabad', 'Surat'
-  ];
-
-  useEffect(() => {
-    const getRandomNotification = () => {
-      const name = NAMES[Math.floor(Math.random() * NAMES.length)];
-      const city = CITIES[Math.floor(Math.random() * CITIES.length)];
-      return `${name} from ${city} just secured the bundle!`;
-    };
-
-    setCurrentNotification(getRandomNotification());
-
-    const interval = setInterval(() => {
-      setCurrentNotification(getRandomNotification());
-    }, 9000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-slate-950/80 backdrop-blur-md">
-      <div className="mx-auto flex h-10 items-center justify-center px-4 text-center">
-        <p className="text-xs font-medium text-zinc-400 animate-pulse">
-          🚀 {currentNotification}
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// --- Main Page ---
-
-export default function DownloadScriptsPage() {
+export default function DownloadPage() {
+  const [timeLeft, setTimeLeft] = useState<number>(TIMER_DURATION);
+  const [isExpired, setIsExpired] = useState<boolean>(false);
+  const [currentBuyerIndex, setCurrentBuyerIndex] = useState<number>(0);
   const [busy, setBusy] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [error, setError] = useState('');
-  const [timeLeft, setTimeLeft] = useState<number>(TIMER_DURATION);
-  const [isExpired, setIsExpired] = useState<boolean>(false);
 
   useEffect(() => {
-    let expiryTimeStr = localStorage.getItem('scenenode_discount_expiry');
+    let expiryTime = localStorage.getItem('scenenode_discount_expiry');
     const now = Date.now();
 
-    if (!expiryTimeStr) {
+    if (!expiryTime) {
       const newExpiry = now + TIMER_DURATION;
       localStorage.setItem('scenenode_discount_expiry', newExpiry.toString());
-      expiryTimeStr = newExpiry.toString();
+      expiryTime = newExpiry.toString();
     }
 
-    const expiryMs = parseInt(expiryTimeStr!, 10);
+    const expiryMs = parseInt(expiryTime, 10);
     const remaining = expiryMs - now;
 
     if (remaining <= 0) {
@@ -96,7 +66,7 @@ export default function DownloadScriptsPage() {
       }
     }, 1000);
 
-    // Also check payment status
+    // Check payment status on load
     void fetch('/api/scripts/payment/status?product=scripts', {
       cache: 'no-store',
       credentials: 'include',
@@ -108,6 +78,14 @@ export default function DownloadScriptsPage() {
       .catch(() => {});
 
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const tickerInterval = setInterval(() => {
+      setCurrentBuyerIndex((prevIndex) => (prevIndex + 1) % BUYERS.length);
+    }, 9000);
+
+    return () => clearInterval(tickerInterval);
   }, []);
 
   const buy = async () => {
@@ -126,128 +104,97 @@ export default function DownloadScriptsPage() {
 
   const minutes = Math.floor((timeLeft / 1000) / 60);
   const seconds = Math.floor((timeLeft / 1000) % 60);
+  const activeBuyer = BUYERS[currentBuyerIndex];
   const currentPrice = isExpired ? 999 : SCRIPT_BUNDLE_PRICE_INR;
-  const originalPrice = 999;
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#020617] text-white font-jakarta">
-      {/* Background Layers */}
-      <div
-        className="absolute inset-0 opacity-30 mix-blend-screen pointer-events-none"
-        style={{
-          backgroundImage: 'url(/images/blue-bg.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
-      />
-      <div
-        className="absolute inset-0 opacity-10 pointer-events-none"
-        style={{
-          backgroundImage: \`url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%234f46e5' stroke-width='1'%3E%3Cpath d='M40 0v40M0 40h40M40 40l20 20M60 60h20v20'/%3E%3C/g%3E%3C/svg%3E")\`,
-          backgroundSize: '80px 80px'
-        }}
-      />
+    <main className="relative min-h-screen overflow-hidden bg-[#020617] text-white font-sans flex flex-col items-center justify-between p-6">
+      {/* Background Accent Layer */}
+      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
 
-      <div className="relative z-10 mx-auto max-w-5xl px-6 py-20 md:px-12 flex flex-col md:flex-row items-center gap-12">
-        {/* Product Visual (Left Side) */}
-        <div className="w-full md:w-1/2 flex justify-center">
-           <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-              <div className="relative bg-slate-900 border border-white/10 rounded-2xl p-4 shadow-2xl">
-                <div className="aspect-video w-full max-w-md rounded-lg bg-slate-800 flex items-center justify-center overflow-hidden">
-                   <img
-                    src="/images/cats-laptops-hero.png"
-                    alt="SceneNode Bundle"
-                    className="object-cover w-full h-full opacity-80"
-                   />
-                </div>
-                <div className="mt-4 text-center">
-                   <p className="text-xs font-bold uppercase tracking-widest text-cyan-400">Premium Assets Bundle</p>
-                </div>
-              </div>
-           </div>
+      {/* Top Header */}
+      <div className="max-w-xl w-full text-center space-y-2 mt-8 z-10">
+        <span className="text-xs uppercase tracking-widest text-cyan-400 font-semibold">SCENENODE • AFTER EFFECTS</span>
+        <h1 className="text-3xl font-bold tracking-tight">Script Bundle</h1>
+      </div>
+
+      {/* Main Container */}
+      <div className="max-w-xl w-full bg-[#0B132B]/90 border border-cyan-900/40 rounded-2xl p-6 shadow-2xl backdrop-blur-md my-auto space-y-6 z-10">
+
+        {/* Timer Banner */}
+        {!isExpired && !unlocked && (
+          <div className="bg-cyan-950/40 border border-cyan-500/30 rounded-xl p-3 text-center flex items-center justify-between">
+            <span className="text-xs text-cyan-300 font-medium">⚡ Special Discount Expires In:</span>
+            <div className="text-cyan-400 font-mono font-bold tracking-wider text-lg">
+              {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+            </div>
+          </div>
+        )}
+        {isExpired && !unlocked && (
+          <div className="bg-red-950/30 border border-red-500/30 rounded-xl p-3 text-center">
+            <span className="text-xs text-red-400 font-medium">⚠️ Flash sale ended. Standard pricing applied for life.</span>
+          </div>
+        )}
+
+        {/* Pricing Area */}
+        <div className="flex items-baseline space-x-3">
+          {!isExpired && !unlocked && (
+            <>
+              <span className="text-3xl font-extrabold text-white">₹{currentPrice}</span>
+              <span className="text-lg text-gray-500 line-through">₹999</span>
+              <span className="bg-cyan-500/10 text-cyan-400 text-xs px-2 py-1 rounded-md font-semibold border border-cyan-500/20">50% OFF</span>
+            </>
+          )}
+          {(isExpired || unlocked) && (
+            <span className="text-3xl font-extrabold text-white">₹{isExpired ? '999' : currentPrice}</span>
+          )}
         </div>
 
-        {/* Sales Content (Right Side) */}
-        <div className="w-full md:w-1/2 space-y-8 text-center md:text-left">
-          <div className="space-y-4">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-500">
-              SceneNode · After Effects
-            </p>
-            <h1 className="text-4xl font-extrabold tracking-tight md:text-5xl leading-tight">
-              SceneNode <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Script Bundle</span>
-            </h1>
-            <p className="text-lg leading-relaxed text-zinc-400 max-w-md">
-              Complete .zip of SceneNode Auto Edit, Beat Mark, and Vault (.jsxbin).
-              One payment unlocks instant download for this browser.
-            </p>
-          </div>
+        <p className="text-gray-400 text-sm leading-relaxed">
+          Complete .zip of SceneNode Auto Edit, Beat Mark, and Vault (.jsxbin). One payment unlocks download for this browser.
+        </p>
 
-          {/* Pricing Section */}
-          <div className="flex items-center justify-center md:justify-start gap-4">
-            <div className="flex items-baseline gap-2">
-              {!isExpired && <s className="text-zinc-500 text-xl">₹{originalPrice}</s>}
-              <span className="text-4xl font-black text-white">₹{currentPrice}</span>
-            </div>
-            {!isExpired && (
-              <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-tighter">
-                50% OFF
-              </span>
-            )}
-            {isExpired && (
-              <span className="bg-zinc-800 text-zinc-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-tighter">
-                Sale Ended
-              </span>
-            )}
-          </div>
+        {/* Action Button */}
+        {unlocked ? (
+          <a
+            href="/api/scripts/download"
+            className="w-full block bg-cyan-500 hover:bg-cyan-400 text-black font-bold py-3.5 px-6 rounded-xl transition duration-200 shadow-lg shadow-cyan-500/20 text-center cursor-pointer"
+          >
+            Download SceneNode-AE-Scripts.zip
+          </a>
+        ) : (
+          <button
+            onClick={() => void buy()}
+            disabled={busy}
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-3.5 px-6 rounded-xl transition duration-200 shadow-lg shadow-blue-600/20 text-center cursor-pointer disabled:opacity-50"
+          >
+            {busy ? 'Opening checkout...' : `Pay ₹${currentPrice} with Razorpay`}
+          </button>
+        )}
 
-          {/* Action Area */}
-          <div className="flex flex-col items-center md:items-start space-y-4">
-            {!unlocked && !isExpired && (
-              <div className="flex flex-col items-center space-y-2 py-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">
-                  Special Discount Expires In:
-                </span>
-                <span className="font-mono text-3xl font-bold text-cyan-400 tabular-nums drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]">
-                  {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-                </span>
-              </div>
-            )}
+        {error && <p className="text-center text-sm text-red-400 font-medium">{error}</p>}
 
-            {unlocked ? (
-              <a
-                href="/api/scripts/download"
-                className="inline-flex w-full md:w-auto justify-center rounded-full bg-cyan-500 px-8 py-4 text-sm font-bold text-black transition hover:bg-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.4)]"
-              >
-                Download SceneNode-AE-Scripts.zip
-              </a>
-            ) : (
-              <button
-                type="button"
-                onClick={() => void buy()}
-                disabled={busy}
-                className="inline-flex w-full md:w-auto justify-center rounded-full bg-[#0284C7] px-8 py-4 text-sm font-bold text-white transition hover:bg-[#0274B7] disabled:opacity-50 shadow-[0_0_20px_rgba(2,132,199,0.4)]"
-              >
-                {busy ? 'Opening checkout…' : `Pay ₹${currentPrice} with Razorpay`}
-              </button>
-            )}
-          </div>
-
-          {error ? <p className="text-sm text-red-400 font-medium">{error}</p> : null}
+        {/* Details list */}
+        <div className="border-t border-gray-800/60 pt-4 space-y-2 text-xs text-gray-400">
+          <div>• Selling price {unlocked ? 'Paid' : `₹${currentPrice}`}</div>
+          <div>• Reseller commission ₹{RESELLER_COMMISSION_INR} per sale (UPI payout)</div>
+          <div>• Platform share {unlocked ? 'Paid' : `₹${isExpired ? '499' : PLATFORM_SHARE_INR}`}</div>
         </div>
       </div>
 
-      {/* Reseller Footer */}
-      <footer className="relative z-10 mt-20 pb-24 text-center px-6">
-        <p className="text-xs text-zinc-500 max-w-lg mx-auto leading-relaxed">
-          Resell this bundle and earn ₹{RESELLER_COMMISSION_INR} per sale. Minimum UPI payout ₹{MIN_PAYOUT_INR}.{' '}
-          <Link href="/dashboard/reseller" className="text-cyan-400 font-semibold hover:underline">
-            Open reseller dashboard
-          </Link>
+      {/* Live Purchase Social Proof Ticker */}
+      <div className="w-full max-w-xl bg-slate-900/60 border border-slate-800 rounded-lg p-2.5 text-center z-10 my-2">
+        <p className="text-xs text-cyan-300 animate-pulse">
+          🔥 <span className="font-semibold text-white">{activeBuyer.name}</span> from <span className="font-semibold text-white">{activeBuyer.location}</span> just secured the bundle!
         </p>
-      </footer>
+      </div>
 
-      <SocialProofTicker />
+      {/* Footer / Reseller link */}
+      <div className="text-center pb-4 z-10">
+        <Link href="/dashboard/reseller" className="text-cyan-400 hover:underline text-xs">
+          Resell this bundle and earn ₹{RESELLER_COMMISSION_INR} per sale. Minimum UPI payout ₹{MIN_PAYOUT_INR}. Open reseller dashboard
+        </Link>
+      </div>
     </main>
   );
 }
