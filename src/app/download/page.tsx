@@ -112,127 +112,147 @@ export default function DownloadPage() {
       {/* Background Accent Layer - Minimalist Gray/White Grid */}
       <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"></div>
 
-      <div className="relative z-10 mx-auto max-w-5xl px-6 py-20 md:px-12 flex flex-col md:flex-row items-center gap-12">
-        {/* Product Visual (Left Side) */}
-        <div className="w-full md:w-1/2 flex justify-center">
-           <div className="relative group">
-              <div className="absolute -inset-1 bg-zinc-500 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-              <div className="relative bg-zinc-900 border border-zinc-800 rounded-2xl p-4 shadow-2xl">
-                <div className="aspect-video w-full max-w-md rounded-lg bg-zinc-800 flex items-center justify-center overflow-hidden">
-                   <img
-                    src="/images/panel.png"
-                    alt="SceneNode After Effects"
-                    className="object-cover w-full h-full opacity-90"
-                   />
-                </div>
-                <div className="mt-4 text-center">
-                   <p className="text-xs font-bold uppercase tracking-widest text-zinc-400">Professional Suite</p>
-                </div>
-              </div>
-           </div>
-        </div>
+      {/* Top Header */}
+      <div className="max-w-5xl w-full text-center space-y-2 mt-6 z-10">
+        <span className="text-xs uppercase tracking-widest text-zinc-500 font-semibold">SCENENODE • AFTER EFFECTS</span>
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Script Bundle</h1>
+      </div>
 
-        {/* Sales Content (Right Side) */}
-        <div className="w-full md:w-1/2 space-y-8 text-center md:text-left">
-          <div className="space-y-4">
-            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-zinc-500">
-              SCENENODE • AFTER EFFECTS
-            </p>
-            <h1 className="text-4xl font-extrabold tracking-tight md:text-5xl leading-tight">
-              Scripts
-            </h1>
+      {/* Main 2-Column High-Conversion Grid Layout */}
+      <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 my-auto z-10 items-start">
 
-            {/* Product Descriptions */}
-            <div className="space-y-6 text-zinc-400 text-sm leading-relaxed">
-              <div className="space-y-2">
-                <h3 className="text-white font-bold text-base">SceneNode Auto Edit</h3>
-                <p>Stop wasting hours manually slicing raw footage frame by frame to match your project's tempo. This powerful automation script instantly analyzes your visual pacing and structures your clips into a seamless rhythm. It cuts down hours of tedious timeline assembly into a single click of execution.</p>
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-white font-bold text-base">SceneNode Beat Mark</h3>
-                <p>Ditch the exhausting process of scrubbing through audio tracks and listening closely to place manual markers one by one. This script instantly scans your music file and snaps timeline markers directly to audio transients and beats. It guarantees pinpoint rhythm synchronization for every cut instantly.</p>
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-white font-bold text-base">SceneNode Vault</h3>
-                <p>Stop digging through cluttered folders or rebuilding complex custom animations from scratch for every new project. This lightning-fast preset vault stores and applies your go-to design assets, effects, and styles instantly. It supercharges your daily editing workflow and keeps your creative momentum flowing without interruptions.</p>
-              </div>
-            </div>
+        {/* LEFT COLUMN: Image, Timer, Pricing, and Instant Pay Button (Zero Friction) */}
+        <div className="lg:col-span-5 bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 shadow-2xl backdrop-blur-md space-y-6 sticky top-6">
 
-            <p className="text-zinc-500 text-xs italic pt-4">
-              Complete .zip of SceneNode Auto Edit, Beat Mark, and Vault.
-              One payment unlocks instant download for this browser.
-            </p>
+          {/* Product Preview Card */}
+          <div className="w-full h-48 bg-zinc-800 rounded-xl border border-zinc-700 flex flex-col items-center justify-center p-4 text-center shadow-inner overflow-hidden">
+             <img
+                src="/images/panel.png"
+                alt="SceneNode Preview"
+                className="w-full h-full object-cover opacity-80"
+             />
+             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40">
+                <span className="text-xs font-mono tracking-widest text-zinc-400 mb-1">PRO SUITE</span>
+                <h3 className="text-lg font-bold text-white">SceneNode Scripts</h3>
+                <p className="text-xs text-zinc-400 mt-1">Auto Edit • Beat Mark • Vault</p>
+             </div>
           </div>
 
-          {/* Pricing Section */}
-          <div className="flex items-center justify-center md:justify-start gap-4">
-            <div className="flex items-baseline gap-2">
-              {!isExpired && !unlocked && <s className="text-zinc-600 text-xl">₹{expiredPrice}</s>}
-              <span className="text-4xl font-black text-white">₹{currentPrice}</span>
+          {/* Timer Banner */}
+          {!isExpired && !unlocked && (
+            <div className="bg-zinc-800/40 border border-zinc-700 rounded-xl p-3 text-center flex items-center justify-between">
+              <span className="text-xs text-zinc-400 font-medium">⚡ Offer Ends In:</span>
+              <div className="text-white font-mono font-bold tracking-wider text-base">
+                {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+              </div>
             </div>
+          )}
+          {isExpired && !unlocked && (
+            <div className="bg-red-950/20 border border-red-900/40 rounded-xl p-3 text-center">
+              <span className="text-xs text-red-400 font-medium">⚠️ Sale ended. Standard price applied.</span>
+            </div>
+          )}
+
+          {/* Pricing Area */}
+          <div className="flex items-baseline space-x-3">
             {!isExpired && !unlocked && (
-              <span className="bg-zinc-100 text-black text-[10px] font-bold px-2 py-1 rounded uppercase tracking-tighter">
-                50% OFF
-              </span>
+              <>
+                <span className="text-3xl font-extrabold text-white">₹{currentPrice}</span>
+                <span className="text-base text-zinc-500 line-through">₹{expiredPrice}</span>
+                <span className="bg-zinc-100 text-black text-xs px-2 py-1 rounded-md font-semibold border border-zinc-200">50% OFF</span>
+              </>
             )}
-            {isExpired && !unlocked && (
-              <span className="bg-zinc-800 text-zinc-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-tighter">
-                Sale Ended
-              </span>
-            )}
-          </div>
-
-          {/* Action Area */}
-          <div className="flex flex-col items-center md:items-start space-y-6">
-            {!unlocked && !isExpired && (
-              <div className="flex flex-col items-center space-y-2 py-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">
-                  Special Discount Expires In:
-                </span>
-                <span className="font-mono text-3xl font-bold text-white tabular-nums">
-                  {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-                </span>
-              </div>
-            )}
-
-            {unlocked ? (
-              <a
-                href="/api/scripts/download"
-                className="inline-flex w-full md:w-auto justify-center rounded-full bg-white px-8 py-4 text-sm font-bold text-black transition hover:bg-zinc-200 shadow-lg shadow-white/10"
-              >
-                Download SceneNode-AE-Scripts.zip
-              </a>
-            ) : (
-              <button
-                type="button"
-                onClick={() => void buy()}
-                disabled={busy}
-                className="inline-flex w-full md:w-auto justify-center rounded-full bg-white px-8 py-4 text-sm font-bold text-black transition hover:bg-zinc-200 disabled:opacity-50 shadow-lg shadow-white/10"
-              >
-                {busy ? 'Opening checkout...' : `Pay ₹${currentPrice} with Razorpay`}
-              </button>
+            {(isExpired || unlocked) && (
+              <span className="text-3xl font-extrabold text-white">₹{unlocked ? 'Paid' : expiredPrice}</span>
             )}
           </div>
 
-          {error && <p className="text-sm text-red-400 font-medium">{error}</p>}
+          {/* Action Button - RIGHT UP FRONT */}
+          {unlocked ? (
+            <a
+              href="/api/scripts/download"
+              className="w-full block bg-white hover:bg-zinc-200 text-black font-bold py-4 px-6 rounded-xl transition duration-200 shadow-lg shadow-white/10 text-center cursor-pointer text-base"
+            >
+              Download SceneNode-AE-Scripts.zip
+            </a>
+          ) : (
+            <button
+              onClick={() => void buy()}
+              disabled={busy}
+              className="w-full bg-white hover:bg-zinc-200 text-black font-semibold py-4 px-6 rounded-xl transition duration-200 shadow-lg shadow-white/10 text-center cursor-pointer text-base disabled:opacity-50"
+            >
+              {busy ? 'Opening checkout...' : `Pay ₹${currentPrice} with Razorpay`}
+            </button>
+          )}
+
+          {error && <p className="text-center text-sm text-red-400 font-medium">{error}</p>}
+
+          {/* Details list */}
+          <div className="border-t border-zinc-800/60 pt-4 space-y-2 text-xs text-zinc-500">
+            <div className="flex justify-between"><span>Selling price:</span> <span className="text-zinc-300">{unlocked ? 'Paid' : `₹${currentPrice}`}</span></div>
+            <div className="flex justify-between"><span>Reseller commission:</span> <span className="text-zinc-300">₹200 (UPI)</span></div>
+          </div>
         </div>
+
+        {/* RIGHT COLUMN: Feature Breakdown & Descriptions */}
+        <div className="lg:col-span-7 space-y-6">
+          <div className="bg-zinc-900/40 border border-zinc-800/80 rounded-2xl p-6 space-y-6 backdrop-blur-sm">
+
+            {/* Script 1 */}
+            <div className="space-y-1.5">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <span className="text-zinc-500">01.</span> SceneNode Auto Edit
+              </h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                Stop wasting hours manually slicing raw footage frame by frame to match your project's tempo. This powerful automation script instantly analyzes your visual pacing and structures your clips into a seamless rhythm. It cuts down hours of tedious timeline assembly into a single click of execution.
+              </p>
+            </div>
+
+            <div className="border-t border-zinc-800/60"></div>
+
+            {/* Script 2 */}
+            <div className="space-y-1.5">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <span className="text-zinc-500">02.</span> SceneNode Beat Mark
+              </h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                Ditch the exhausting process of scrubbing through audio tracks and listening closely to place manual markers one by one. This script instantly scans your music file and snaps timeline markers directly to audio transients and beats. It guarantees pinpoint rhythm synchronization for every cut instantly.
+              </p>
+            </div>
+
+            <div className="border-t border-zinc-800/60"></div>
+
+            {/* Script 3 */}
+            <div className="space-y-1.5">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <span className="text-zinc-500">03.</span> SceneNode Vault
+              </h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                Stop digging through cluttered folders or rebuilding complex custom animations from scratch for every new project. This lightning-fast preset vault stores and applies your go-to design assets, effects, and styles instantly. It supercharges your daily editing workflow and keeps your creative momentum flowing without interruptions.
+              </p>
+            </div>
+
+            <div className="border-t border-zinc-800/60 pt-4 text-xs text-zinc-500 italic">
+              Complete .zip of SceneNode Auto Edit, Beat Mark, and Vault. One payment unlocks download for this browser instantly.
+            </div>
+          </div>
+        </div>
+
       </div>
 
       {/* Live Purchase Social Proof Ticker */}
-      <div className="relative z-10 w-full max-w-xl bg-zinc-900/50 border border-zinc-800 rounded-lg p-2.5 text-center my-6">
+      <div className="w-full max-w-xl bg-zinc-900/80 border border-zinc-800 rounded-lg p-2.5 text-center z-10 my-4 shadow-lg">
         <p className="text-xs text-zinc-400 animate-pulse">
           🔥 <span className="font-semibold text-white">{activeBuyer.name}</span> from <span className="font-semibold text-white">{activeBuyer.location}</span> just secured the scripts!
         </p>
       </div>
 
       {/* Footer / Reseller link */}
-      <footer className="relative z-10 mt-20 pb-24 text-center px-6">
-        <div className="space-y-4">
-           <Link href="/dashboard/reseller" className="text-zinc-400 font-semibold hover:text-white transition-colors text-xs underline underline-offset-4">
-             Refer and earn. Open dashboard
-           </Link>
-        </div>
-      </footer>
+      <div className="text-center pb-4 z-10">
+        <Link href="/dashboard/reseller" className="text-zinc-500 hover:text-white transition-colors text-xs underline underline-offset-4">
+          Refer and earn. Open dashboard
+        </Link>
+      </div>
     </main>
   );
 }
