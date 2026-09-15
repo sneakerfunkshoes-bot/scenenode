@@ -10,63 +10,9 @@ import {
   SCRIPT_BUNDLE_PRICE_INR,
 } from '@/lib/script-catalog';
 
+const TIMER_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+
 // --- CRO Components ---
-
-function UrgencyTimer({ onExpire }: { onExpire: () => void }) {
-  const [timeLeft, setTimeLeft] = useState('');
-
-  useEffect(() => {
-    const TIMER_DURATION = 10 * 60 * 1000; // 10 minutes
-    let expiryTimeStr = localStorage.getItem('scenenode_discount_expiry');
-    const now = Date.now();
-
-    if (!expiryTimeStr) {
-      const newExpiry = now + TIMER_DURATION;
-      localStorage.setItem('scenenode_discount_expiry', newExpiry.toString());
-      expiryTimeStr = newExpiry.toString();
-    }
-
-    const expiryTime = parseInt(expiryTimeStr!, 10);
-
-    const updateTimer = () => {
-      const currentNow = Date.now();
-      const diff = expiryTime - currentNow;
-
-      if (diff <= 0) {
-        setTimeLeft('00:00');
-        onExpire();
-        return false; // stop interval
-      }
-
-      const minutes = Math.floor((diff / 1000 / 60));
-      const seconds = Math.floor((diff / 1000) % 60);
-      setTimeLeft(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
-      return true;
-    };
-
-    // Initial check
-    if (!updateTimer()) return;
-
-    const interval = setInterval(() => {
-      if (!updateTimer()) {
-        clearInterval(interval);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [onExpire]);
-
-  return (
-    <div className="flex flex-col items-center space-y-2 py-4">
-      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">
-        Special Discount Expires In:
-      </span>
-      <span className="font-mono text-3xl font-bold text-cyan-400 tabular-nums drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]">
-        {timeLeft || '00:00'}
-      </span>
-    </div>
-  );
-}
 
 function SocialProofTicker() {
   const [currentNotification, setCurrentNotification] = useState('');
@@ -114,18 +60,43 @@ export default function DownloadScriptsPage() {
   const [busy, setBusy] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [error, setError] = useState('');
-  const [isExpired, setIsExpired] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number>(TIMER_DURATION);
+  const [isExpired, setIsExpired] = useState<boolean>(false);
 
   useEffect(() => {
-    // Check if already expired on load
-    const expiryTimeStr = localStorage.getItem('scenenode_discount_expiry');
-    if (expiryTimeStr) {
-      const expiryTime = parseInt(expiryTimeStr, 10);
-      if (Date.now() >= expiryTime) {
-        setIsExpired(true);
-      }
+    let expiryTimeStr = localStorage.getItem('scenenode_discount_expiry');
+    const now = Date.now();
+
+    if (!expiryTimeStr) {
+      const newExpiry = now + TIMER_DURATION;
+      localStorage.setItem('scenenode_discount_expiry', newExpiry.toString());
+      expiryTimeStr = newExpiry.toString();
     }
 
+    const expiryMs = parseInt(expiryTimeStr!, 10);
+    const remaining = expiryMs - now;
+
+    if (remaining <= 0) {
+      setIsExpired(true);
+      setTimeLeft(0);
+    } else {
+      setTimeLeft(remaining);
+    }
+
+    const interval = setInterval(() => {
+      const currentNow = Date.now();
+      const currentRemaining = expiryMs - currentNow;
+
+      if (currentRemaining <= 0) {
+        setIsExpired(true);
+        setTimeLeft(0);
+        clearInterval(interval);
+      } else {
+        setTimeLeft(currentRemaining);
+      }
+    }, 1000);
+
+    // Also check payment status
     void fetch('/api/scripts/payment/status?product=scripts', {
       cache: 'no-store',
       credentials: 'include',
@@ -134,9 +105,9 @@ export default function DownloadScriptsPage() {
       .then((data: { unlocked?: boolean }) => {
         if (data.unlocked) setUnlocked(true);
       })
-      .catch(() => {
-        /* ignore */
-      });
+      .catch(() => {});
+
+    return () => clearInterval(interval);
   }, []);
 
   const buy = async () => {
@@ -153,6 +124,8 @@ export default function DownloadScriptsPage() {
     }
   };
 
+  const minutes = Math.floor((timeLeft / 1000) / 60);
+  const seconds = Math.floor((timeLeft / 1000) % 60);
   const currentPrice = isExpired ? 999 : SCRIPT_BUNDLE_PRICE_INR;
   const originalPrice = 999;
 
@@ -229,9 +202,17 @@ export default function DownloadScriptsPage() {
           </div>
 
           {/* Action Area */}
-          <div className="flex flex-col items-center md:items-start">
-            {!unlocked && !isExpired && <UrgencyTimer onExpire={() => setIsExpired(true)} />}
-            {unlocked && !isExpired && <div className="py-4 text-cyan-400 font-mono text-sm">✓ Discount applied</div>}
+          <div className="flex flex-col items-center md:items-start space-y-4">
+            {!unlocked && !isExpired && (
+              <div className="flex flex-col items-center space-y-2 py-2">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">
+                  Special Discount Expires In:
+                </span>
+                <span className="font-mono text-3xl font-bold text-cyan-400 tabular-nums drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]">
+                  {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+                </span>
+              </div>
+            )}
 
             {unlocked ? (
               <a
