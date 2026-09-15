@@ -12,36 +12,49 @@ import {
 
 // --- CRO Components ---
 
-function UrgencyTimer() {
+function UrgencyTimer({ onExpire }: { onExpire: () => void }) {
   const [timeLeft, setTimeLeft] = useState('');
 
   useEffect(() => {
     const TIMER_DURATION = 10 * 60 * 1000; // 10 minutes
-    let expiryTime = localStorage.getItem('scenenode_discount_expiry');
+    let expiryTimeStr = localStorage.getItem('scenenode_discount_expiry');
+    const now = Date.now();
 
-    if (!expiryTime) {
-      expiryTime = (Date.now() + TIMER_DURATION).toString();
-      localStorage.setItem('scenenode_discount_expiry', expiryTime);
+    if (!expiryTimeStr) {
+      const newExpiry = now + TIMER_DURATION;
+      localStorage.setItem('scenenode_discount_expiry', newExpiry.toString());
+      expiryTimeStr = newExpiry.toString();
     }
 
-    const interval = setInterval(() => {
-      const now = Date.now();
-      const diff = parseInt(expiryTime!) - now;
+    const expiryTime = parseInt(expiryTimeStr!, 10);
+
+    const updateTimer = () => {
+      const currentNow = Date.now();
+      const diff = expiryTime - currentNow;
 
       if (diff <= 0) {
-        // Reset timer after it expires to maintain urgency on repeat visits
-        const newExpiry = now + TIMER_DURATION;
-        localStorage.setItem('scenenode_discount_expiry', newExpiry.toString());
-        expiryTime = newExpiry;
+        setTimeLeft('00:00');
+        onExpire();
+        return false; // stop interval
       }
 
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      const minutes = Math.floor((diff / 1000 / 60));
+      const seconds = Math.floor((diff / 1000) % 60);
       setTimeLeft(`${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+      return true;
+    };
+
+    // Initial check
+    if (!updateTimer()) return;
+
+    const interval = setInterval(() => {
+      if (!updateTimer()) {
+        clearInterval(interval);
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [onExpire]);
 
   return (
     <div className="flex flex-col items-center space-y-2 py-4">
@@ -101,8 +114,18 @@ export default function DownloadScriptsPage() {
   const [busy, setBusy] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [error, setError] = useState('');
+  const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
+    // Check if already expired on load
+    const expiryTimeStr = localStorage.getItem('scenenode_discount_expiry');
+    if (expiryTimeStr) {
+      const expiryTime = parseInt(expiryTimeStr, 10);
+      if (Date.now() >= expiryTime) {
+        setIsExpired(true);
+      }
+    }
+
     void fetch('/api/scripts/payment/status?product=scripts', {
       cache: 'no-store',
       credentials: 'include',
@@ -130,6 +153,9 @@ export default function DownloadScriptsPage() {
     }
   };
 
+  const currentPrice = isExpired ? 999 : SCRIPT_BUNDLE_PRICE_INR;
+  const originalPrice = 999;
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#020617] text-white font-jakarta">
       {/* Background Layers */}
@@ -144,7 +170,7 @@ export default function DownloadScriptsPage() {
       <div
         className="absolute inset-0 opacity-10 pointer-events-none"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%234f46e5' stroke-width='1'%3E%3Cpath d='M40 0v40M0 40h40M40 40l20 20M60 60h20v20'/%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundImage: \`url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%234f46e5' stroke-width='1'%3E%3Cpath d='M40 0v40M0 40h40M40 40l20 20M60 60h20v20'/%3E%3C/g%3E%3C/svg%3E")\`,
           backgroundSize: '80px 80px'
         }}
       />
@@ -187,17 +213,25 @@ export default function DownloadScriptsPage() {
           {/* Pricing Section */}
           <div className="flex items-center justify-center md:justify-start gap-4">
             <div className="flex items-baseline gap-2">
-              <s className="text-zinc-500 text-xl">₹999</s>
-              <span className="text-4xl font-black text-white">₹{SCRIPT_BUNDLE_PRICE_INR}</span>
+              {!isExpired && <s className="text-zinc-500 text-xl">₹{originalPrice}</s>}
+              <span className="text-4xl font-black text-white">₹{currentPrice}</span>
             </div>
-            <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-tighter">
-              50% OFF
-            </span>
+            {!isExpired && (
+              <span className="bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-tighter">
+                50% OFF
+              </span>
+            )}
+            {isExpired && (
+              <span className="bg-zinc-800 text-zinc-400 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-tighter">
+                Sale Ended
+              </span>
+            )}
           </div>
 
           {/* Action Area */}
           <div className="flex flex-col items-center md:items-start">
-            {!unlocked && <UrgencyTimer />}
+            {!unlocked && !isExpired && <UrgencyTimer onExpire={() => setIsExpired(true)} />}
+            {unlocked && !isExpired && <div className="py-4 text-cyan-400 font-mono text-sm">✓ Discount applied</div>}
 
             {unlocked ? (
               <a
@@ -213,7 +247,7 @@ export default function DownloadScriptsPage() {
                 disabled={busy}
                 className="inline-flex w-full md:w-auto justify-center rounded-full bg-[#0284C7] px-8 py-4 text-sm font-bold text-white transition hover:bg-[#0274B7] disabled:opacity-50 shadow-[0_0_20px_rgba(2,132,199,0.4)]"
               >
-                {busy ? 'Opening checkout…' : `Pay ₹${SCRIPT_BUNDLE_PRICE_INR} with Razorpay`}
+                {busy ? 'Opening checkout…' : `Pay ₹${currentPrice} with Razorpay`}
               </button>
             )}
           </div>
